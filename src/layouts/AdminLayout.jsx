@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, Menu } from "lucide-react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { ExternalLink, LogOut, Menu } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
 import { useAuth } from "../contexts/AuthContext";
@@ -56,7 +56,7 @@ export default function AdminLayout() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 md:gap-3">
                 <div className="hidden text-right sm:block">
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">
                     {user?.name || "Admin Gereja"}
@@ -65,6 +65,14 @@ export default function AdminLayout() {
                     {user?.email || "admin@gerejaamin.org"}
                   </p>
                 </div>
+
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                >
+                  <ExternalLink size={16} />
+                  <span className="hidden sm:inline">Lihat Website</span>
+                </Link>
 
                 <ThemeToggle />
 
