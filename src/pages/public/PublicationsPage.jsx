@@ -1,92 +1,86 @@
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { FileText, Plus } from "lucide-react";
+import PublicAdminActionBar from "../../components/public/PublicAdminActionBar";
+import {
+  PUBLICATIONS_STORAGE_KEY,
+  filterPublicationsByCategory,
+  formatPublicDate,
+  getPublicationCategories,
+  listActivePublications,
+  publicationSeed,
+} from "../../services/publicationsService";
+import useLocalStorageState from "../../hooks/useLocalStorageState";
+
 export default function PublicationsPage() {
-  const featuredPost = {
-    category: "Renungan Harian",
-    title: "Hidup dalam Ketaatan dan Kasih",
-    excerpt:
-      "Renungan ini mengajak jemaat untuk tetap setia dalam firman, hidup dalam kasih, dan bertumbuh dalam iman di tengah tantangan sehari-hari.",
-    date: "25 Mei 2026",
-    author: "Admin Gereja",
-  };
-
-  const publications = [
-    {
-      type: "Warta Jemaat",
-      title: "Informasi Ibadah Minggu dan Kegiatan Pelayanan",
-      description:
-        "Ringkasan informasi ibadah, pengumuman jemaat, dan agenda pelayanan minggu ini.",
-      date: "22 Mei 2026",
-    },
-    {
-      type: "Renungan Harian",
-      title: "Berserah kepada Tuhan dalam Setiap Keadaan",
-      description:
-        "Renungan singkat untuk menguatkan jemaat dalam menghadapi proses kehidupan sehari-hari.",
-      date: "21 Mei 2026",
-    },
-    {
-      type: "Buletin Khotbah",
-      title: "Iman yang Hidup dalam Perbuatan",
-      description:
-        "Ringkasan firman Tuhan dan poin utama khotbah untuk dibawa pulang dan direnungkan kembali.",
-      date: "19 Mei 2026",
-    },
-    {
-      type: "Warta Jemaat",
-      title: "Jadwal Pelayanan Komisi Minggu Ini",
-      description:
-        "Informasi petugas pelayanan, jadwal kegiatan komisi, dan pembagian tanggung jawab jemaat.",
-      date: "18 Mei 2026",
-    },
-    {
-      type: "Renungan Harian",
-      title: "Tetap Setia dalam Doa",
-      description:
-        "Penguatan rohani bagi jemaat untuk membangun kehidupan doa yang konsisten dan penuh pengharapan.",
-      date: "16 Mei 2026",
-    },
-    {
-      type: "Buletin Khotbah",
-      title: "Kasih yang Menyatukan Jemaat",
-      description:
-        "Materi singkat khotbah tentang kasih, persekutuan, dan hidup saling membangun di dalam Tuhan.",
-      date: "12 Mei 2026",
-    },
-  ];
-
-  const filters = ["Semua", "Warta Jemaat", "Renungan Harian", "Buletin Khotbah"];
+  const [publications] = useLocalStorageState(PUBLICATIONS_STORAGE_KEY, publicationSeed);
+  const [activeFilter, setActiveFilter] = useState("Semua");
+  const publicPublications = useMemo(
+    () => listActivePublications(publications),
+    [publications]
+  );
+  const visiblePublications = useMemo(
+    () => filterPublicationsByCategory(publications, activeFilter),
+    [activeFilter, publications]
+  );
+  const featuredPost = publicPublications[0] || publications[0] || publicationSeed[0];
+  const filters = getPublicationCategories(publications);
 
   return (
     <div className="space-y-10">
-      <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-100 to-white px-6 py-10 md:px-10 md:py-14 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+      <PublicAdminActionBar
+        title="Kelola publikasi gereja"
+        description="Tambah atau edit warta jemaat, renungan, dan buletin khotbah dari panel admin."
+        actions={[
+          {
+            label: "Tambah Publikasi",
+            to: "/admin/articles?action=create",
+            icon: Plus,
+            variant: "primary",
+          },
+          {
+            label: "Kelola Publikasi",
+            to: "/admin/articles",
+            icon: FileText,
+          },
+        ]}
+      />
+
+      <section className="brand-card rounded-3xl px-6 py-10 md:px-10 md:py-14">
+        <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
           Publikasi Gereja
         </p>
-        <h1 className="mt-3 text-3xl font-bold text-slate-900 md:text-5xl dark:text-white">
+        <h1 className="mt-3 max-w-4xl text-3xl font-bold text-slate-950 md:text-5xl dark:text-white">
           Warta, renungan, dan buletin dalam satu tempat.
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 md:text-base dark:text-slate-300">
-          Halaman ini menampilkan publikasi gereja untuk membantu jemaat mengikuti informasi
-          terbaru, membaca renungan harian, dan mengakses ringkasan firman atau buletin khotbah.
+          Ikuti informasi terbaru, renungan harian, dan ringkasan firman untuk
+          mendukung pertumbuhan jemaat.
         </p>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <section className="brand-card p-5 md:p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
               Filter Publikasi
             </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-              Temukan konten yang kamu cari
+            <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
+              Temukan konten yang dicari
             </h2>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {filters.map((filter) => (
+            {filters.map((filter, index) => (
               <button
                 key={filter}
                 type="button"
-                className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                onClick={() => setActiveFilter(filter)}
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                  activeFilter === filter || (index === 0 && activeFilter === "Semua")
+                    ? "border-violet-700 bg-violet-700 text-white dark:border-violet-200 dark:bg-violet-200 dark:text-violet-950"
+                    : "border-violet-200 text-slate-700 hover:bg-violet-50 dark:border-violet-950/60 dark:text-slate-200 dark:hover:bg-violet-950/30"
+                }`}
               >
                 {filter}
               </button>
@@ -95,130 +89,87 @@ export default function PublicationsPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8 dark:border-slate-800 dark:bg-slate-900">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-          Publikasi Unggulan
-        </p>
-
-        <div className="mt-4 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-          <div className="rounded-2xl bg-slate-100 p-6 dark:bg-slate-800">
-            <span className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200">
-              {featuredPost.category}
-            </span>
-            <h2 className="mt-4 text-2xl font-bold text-slate-900 md:text-3xl dark:text-white">
-              {featuredPost.title}
-            </h2>
-            <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
-              {featuredPost.excerpt}
-            </p>
-
-            <div className="mt-5 flex flex-wrap gap-3 text-sm text-slate-500 dark:text-slate-400">
-              <span>{featuredPost.date}</span>
-              <span>•</span>
-              <span>{featuredPost.author}</span>
-            </div>
-
-            <a
-              href="/publikasi/contoh-artikel"
-              className="mt-6 inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 dark:bg-slate-100 dark:text-slate-900"
-            >
-              Baca Selengkapnya
-            </a>
+      <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+        <article className="rounded-3xl border border-violet-200 bg-[#2c2038] p-6 text-white shadow-sm md:p-8 dark:border-violet-950/60">
+          <span className="inline-flex rounded-full bg-cyan-100/15 px-3 py-1 text-xs font-semibold text-cyan-100">
+            {featuredPost.category}
+          </span>
+          <h2 className="mt-4 text-2xl font-bold md:text-3xl">{featuredPost.title}</h2>
+          <p className="mt-4 text-sm leading-7 text-white/80">{featuredPost.excerpt}</p>
+          <div className="mt-5 flex flex-wrap gap-3 text-sm text-white/60">
+            <span>{formatPublicDate(featuredPost.date)}</span>
+            <span>-</span>
+            <span>{featuredPost.author || "Sekretariat Gereja"}</span>
           </div>
+          <Link
+            to={`/publikasi/${featuredPost.slug}`}
+            className="mt-6 inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-violet-900 transition hover:bg-violet-50"
+          >
+            Baca Selengkapnya
+          </Link>
+        </article>
 
-          <div className="grid gap-4">
-            <div className="rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
-              <p className="text-sm text-slate-500 dark:text-slate-400">Konten Aktif</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">24</p>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                Total publikasi yang dapat dikelola melalui dashboard admin.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
-              <p className="text-sm text-slate-500 dark:text-slate-400">Kategori</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">3</p>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                Warta Jemaat, Renungan Harian, dan Buletin Khotbah.
-              </p>
-            </div>
-          </div>
+        <div className="grid gap-4">
+          <MetricCard title="Konten Aktif" value={publicPublications.length} description="Total publikasi aktif dari dummy localStorage." />
+          <MetricCard title="Kategori" value={new Set(publicPublications.map((item) => item.category)).size} description="Kategori mengikuti data publikasi admin." />
         </div>
       </section>
 
       <section>
         <div className="mb-5">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+          <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
             Daftar Publikasi
           </p>
-          <h2 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
+          <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
             Informasi terbaru untuk jemaat
           </h2>
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {publications.map((item) => (
+          {visiblePublications.map((item) => (
             <article
-              key={`${item.type}-${item.title}`}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+              key={item.id}
+              className="brand-card p-6 transition hover:-translate-y-1 hover:shadow-md"
             >
-              <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                {item.type}
+              <span className="inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
+                {item.category}
               </span>
-
-              <h3 className="mt-4 text-xl font-semibold text-slate-900 dark:text-white">
+              <h3 className="mt-4 text-xl font-semibold text-slate-950 dark:text-white">
                 {item.title}
               </h3>
-
               <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                {item.description}
+                {item.excerpt}
               </p>
-
               <div className="mt-5 flex items-center justify-between gap-3">
-                <span className="text-sm text-slate-500 dark:text-slate-400">{item.date}</span>
-                <a
-                  href="/publikasi/contoh-artikel"
-                  className="text-sm font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
+                <span className="text-sm text-slate-500 dark:text-slate-400">{formatPublicDate(item.date)}</span>
+                <Link
+                  to={`/publikasi/${item.slug}`}
+                  className="brand-link text-sm font-semibold underline underline-offset-4"
                 >
                   Baca
-                </a>
+                </Link>
               </div>
             </article>
           ))}
+          {visiblePublications.length === 0 ? (
+            <div className="brand-card p-6 text-sm leading-7 text-slate-600 dark:text-slate-300 md:col-span-2 xl:col-span-3">
+              Belum ada publikasi aktif untuk kategori ini.
+            </div>
+          ) : null}
         </div>
       </section>
+    </div>
+  );
+}
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8 dark:border-slate-800 dark:bg-slate-900">
-        <div className="grid gap-6 md:grid-cols-2 md:items-center">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-              Tetap Terhubung
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl dark:text-white">
-              Ikuti setiap informasi dan pembinaan jemaat.
-            </h2>
-            <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-              Publikasi gereja membantu jemaat untuk tetap terinformasi dan bertumbuh dalam firman
-              Tuhan melalui konten yang teratur dan mudah diakses.
-            </p>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <a
-              href="/kontak"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 dark:bg-slate-100 dark:text-slate-900"
-            >
-              Hubungi Kami
-            </a>
-            <a
-              href="/jadwal-ibadah"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              Lihat Jadwal
-            </a>
-          </div>
-        </div>
-      </section>
+function MetricCard({ title, value, description }) {
+  return (
+    <div className="brand-card p-5">
+      <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
+      <p className="mt-2 text-3xl font-bold text-slate-950 dark:text-white">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+        {description}
+      </p>
     </div>
   );
 }

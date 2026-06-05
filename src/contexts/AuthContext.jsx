@@ -1,68 +1,300 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AuthContext } from "./authContextValue";
+import { adminRoles, roleLabels } from "../data/adminAccess";
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
 
-const AuthContext = createContext(null);
 const AUTH_KEY = "admin-auth";
+const PROFILE_SELECT = "id, full_name, role_id, is_active, role:roles(id, label)";
+const demoAuthEnabled =
+  !isSupabaseConfigured || import.meta.env.VITE_ENABLE_DEMO_AUTH === "true";
+
+const demoUsers = [
+  {
+    name: "Super Admin Gereja",
+    email: "admin@gerejaamin.org",
+    password: "admin123",
+    role: adminRoles.superAdmin,
+  },
+  {
+    name: "Sekretaris Jemaat",
+    email: "sekretaris@gerejaamin.org",
+    password: "admin123",
+    role: adminRoles.sekretaris,
+  },
+  {
+    name: "Bendahara Gereja",
+    email: "bendahara@gerejaamin.org",
+    password: "admin123",
+    role: adminRoles.bendahara,
+  },
+];
+
+function normalizeSavedUser(user) {
+  if (!user) return null;
+
+  return {
+    ...user,
+    role: user.role === "admin" ? adminRoles.superAdmin : user.role,
+    authMode: user.authMode || "demo",
+  };
+}
+
+function getInitialUser() {
+  try {
+    const saved = localStorage.getItem(AUTH_KEY);
+    if (!saved) return null;
+
+    const parsed = JSON.parse(saved);
+    const normalizedUser = normalizeSavedUser(parsed);
+
+    if (normalizedUser.role !== parsed.role) {
+      localStorage.setItem(AUTH_KEY, JSON.stringify(normalizedUser));
+    }
+
+    return normalizedUser;
+  } catch {
+    localStorage.removeItem(AUTH_KEY);
+    return null;
+  }
+}
+
+function persistUser(user) {
+  if (user) {
+    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    return;
+  }
+
+  localStorage.removeItem(AUTH_KEY);
+}
+
+function getDemoUser({ email, password }) {
+  const normalizedEmail = (email || "").trim().toLowerCase();
+  const normalizedPassword = (password || "").trim();
+
+  return demoUsers.find(
+    (item) => item.email === normalizedEmail && item.password === normalizedPassword
+  );
+}
+
+function createDemoSessionUser(matchedUser) {
+  return {
+    name: matchedUser.name,
+    email: matchedUser.email,
+    role: matchedUser.role,
+    authMode: "demo",
+  };
+}
+
+function getProfileRole(profile) {
+  return profile?.role?.id || profile?.role_id;
+}
+
+function buildSupabaseUser(session, profile) {
+  const role = getProfileRole(profile);
+
+  if (!profile) {
+    throw new Error("Profile admin belum dibuat. Tambahkan row di tabel profiles untuk user ini.");
+  }
+
+  if (!profile.is_active) {
+    throw new Error("Profile admin tidak aktif. Hubungi Super Admin.");
+  }
+
+  if (!roleLabels[role]) {
+    throw new Error("Role profile belum valid. Gunakan super_admin, bendahara, atau sekretaris.");
+  }
+
+  return {
+    id: session.user.id,
+    name: profile.full_name || session.user.email,
+    email: session.user.email,
+    role,
+    authMode: "supabase",
+  };
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => (demoAuthEnabled ? getInitialUser() : null));
+  const [authLoading, setAuthLoading] = useState(isSupabaseConfigured);
+  const [authError, setAuthError] = useState("");
 
-  useEffect(() => {
-    const saved = localStorage.getItem(AUTH_KEY);
-    if (saved) {
-      setUser(JSON.parse(saved));
+  const applySupabaseSession = useCallback(async (session) => {
+    if (!session?.user || !supabase) {
+      if (!demoAuthEnabled) {
+        persistUser(null);
+        setUser(null);
+      }
+      return null;
     }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(PROFILE_SELECT)
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const nextUser = buildSupabaseUser(session, data);
+    persistUser(nextUser);
+    setUser(nextUser);
+    setAuthError("");
+    return nextUser;
   }, []);
 
-  const login = ({ email, password }) => {
-    const normalizedEmail = (email || "").trim().toLowerCase();
-    const normalizedPassword = (password || "").trim();
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) {
+      return undefined;
+    }
 
-    const validEmail = "admin@gerejaamin.org";
-    const validPassword = "admin123";
+    let mounted = true;
 
-    if (normalizedEmail === validEmail && normalizedPassword === validPassword) {
-      const loggedInUser = {
-        name: "Admin Gereja",
-        email: validEmail,
-        role: "admin",
-      };
+    Promise.resolve().then(async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (!mounted) return;
+        if (error) throw error;
 
-      localStorage.setItem(AUTH_KEY, JSON.stringify(loggedInUser));
+        if (data.session) {
+          await applySupabaseSession(data.session);
+        } else if (!demoAuthEnabled) {
+          persistUser(null);
+          setUser(null);
+        }
+      } catch (sessionError) {
+        if (!mounted) return;
+        setAuthError(sessionError.message || "Gagal membaca session Supabase.");
+        if (!demoAuthEnabled) {
+          persistUser(null);
+          setUser(null);
+        }
+      } finally {
+        if (mounted) setAuthLoading(false);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(async () => {
+        if (!mounted) return;
+
+        try {
+          if (session) {
+            await applySupabaseSession(session);
+          } else if (!demoAuthEnabled) {
+            persistUser(null);
+            setUser(null);
+          }
+        } catch (eventError) {
+          if (!mounted) return;
+          setAuthError(eventError.message || "Gagal sinkronisasi auth Supabase.");
+          if (!demoAuthEnabled) {
+            persistUser(null);
+            setUser(null);
+          }
+        }
+      }, 0);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [applySupabaseSession]);
+
+  const loginDemo = useCallback(({ email, password }) => {
+    const matchedUser = getDemoUser({ email, password });
+  
+    if (matchedUser) {
+      const loggedInUser = createDemoSessionUser(matchedUser);
+
+      persistUser(loggedInUser);
       setUser(loggedInUser);
+      setAuthError("");
 
-      return { success: true };
+      return {
+        success: true,
+        mode: "demo",
+      };
     }
 
     return {
       success: false,
       message: "Email atau password salah.",
     };
-  };
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem(AUTH_KEY);
+  const login = useCallback(async ({ email, password }) => {
+    setAuthError("");
+
+    if (isSupabaseConfigured && supabase) {
+      setAuthLoading(true);
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: (email || "").trim().toLowerCase(),
+          password,
+        });
+
+        if (error) throw error;
+
+        const loggedInUser = await applySupabaseSession(data.session);
+
+        return {
+          success: true,
+          mode: "supabase",
+          user: loggedInUser,
+        };
+      } catch (loginError) {
+        if (demoAuthEnabled) {
+          const fallbackResult = loginDemo({ email, password });
+
+          if (fallbackResult.success) {
+            return {
+              ...fallbackResult,
+              message: "Supabase Auth belum siap, masuk memakai mode demo lokal.",
+            };
+          }
+        }
+
+        const message = loginError.message || "Login Supabase gagal.";
+        setAuthError(message);
+        return {
+          success: false,
+          message,
+        };
+      } finally {
+        setAuthLoading(false);
+      }
+    }
+
+    return loginDemo({ email, password });
+  }, [applySupabaseSession, loginDemo]);
+
+  const logout = useCallback(async () => {
+    if (isSupabaseConfigured && supabase && user?.authMode === "supabase") {
+      await supabase.auth.signOut();
+    }
+
+    persistUser(null);
     setUser(null);
-  };
+  }, [user?.authMode]);
 
   const value = useMemo(
     () => ({
+      authError,
+      authLoading,
+      authMode: user?.authMode || (isSupabaseConfigured ? "supabase" : "demo"),
+      demoAuthEnabled,
       user,
       isAuthenticated: Boolean(user),
+      isSupabaseAuth: user?.authMode === "supabase",
       login,
       logout,
     }),
-    [user]
+    [authError, authLoading, login, logout, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-
-  return context;
 }

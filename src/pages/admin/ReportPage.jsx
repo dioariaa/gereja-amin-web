@@ -1,191 +1,364 @@
-const summaryCards = [
-  { title: "Saldo Awal", value: "Rp 10.000.000" },
-  { title: "Total Kas Masuk", value: "Rp 12.500.000" },
-  { title: "Total Kas Keluar", value: "Rp 7.250.000" },
-  { title: "Saldo Akhir", value: "Rp 15.250.000" },
-];
+import { useMemo, useState } from "react";
+import { FileDown, Filter, Printer, Wallet } from "lucide-react";
+import ActionButton from "../../components/admin/ActionButton";
+import AdminPageHeader from "../../components/admin/AdminPageHeader";
+import DataSourceNotice from "../../components/admin/DataSourceNotice";
+import FilterPanel from "../../components/admin/FilterPanel";
+import FormField from "../../components/admin/FormField";
+import StatusBadge from "../../components/admin/StatusBadge";
+import SummaryCard from "../../components/admin/SummaryCard";
+import {
+  expenseCategories,
+  formatCurrency,
+  formatNumber,
+  formatShortFinanceDate,
+  incomeCategories,
+  listFinanceTransactions,
+  openingBalance,
+} from "../../services/financeService";
+import useFinanceTransactions from "../../hooks/useFinanceTransactions";
 
-const reportRows = [
-  {
-    date: "01 Mei 2026",
-    type: "Masuk",
-    category: "Persembahan Minggu",
-    description: "Ibadah umum minggu pertama",
-    amount: "Rp 2.500.000",
-  },
-  {
-    date: "05 Mei 2026",
-    type: "Keluar",
-    category: "Operasional",
-    description: "Pembelian alat kebersihan",
-    amount: "Rp 450.000",
-  },
-  {
-    date: "10 Mei 2026",
-    type: "Masuk",
-    category: "Perpuluhan",
-    description: "Setoran jemaat",
-    amount: "Rp 1.800.000",
-  },
-  {
-    date: "12 Mei 2026",
-    type: "Keluar",
-    category: "Diakonia",
-    description: "Bantuan sosial jemaat",
-    amount: "Rp 1.000.000",
-  },
-  {
-    date: "18 Mei 2026",
-    type: "Masuk",
-    category: "Dana Pembangunan",
-    description: "Donasi pembangunan gereja",
-    amount: "Rp 3.200.000",
-  },
+const monthOptions = [
+  { label: "April", value: "04" },
+  { label: "Mei", value: "05" },
+  { label: "Juni", value: "06" },
 ];
 
 export default function ReportPage() {
+  const {
+    error: dataError,
+    loading: dataLoading,
+    source: dataSource,
+    transactions: savedTransactions,
+  } = useFinanceTransactions();
+  const [month, setMonth] = useState("04");
+  const [year, setYear] = useState("2026");
+
+  const selectedMonth = monthOptions.find((item) => item.value === month) || monthOptions[0];
+  const transactions = useMemo(
+    () =>
+      listFinanceTransactions(savedTransactions)
+        .filter((item) => item.status !== "Draft")
+        .filter((item) => item.date?.startsWith(`${year}-${month}`)),
+    [month, savedTransactions, year]
+  );
+  const receiptRows = useMemo(
+    () => buildReportRows(transactions, "Masuk", incomeCategories),
+    [transactions]
+  );
+  const expenseRows = useMemo(
+    () => buildReportRows(transactions, "Keluar", expenseCategories),
+    [transactions]
+  );
+
+  const totals = useMemo(() => {
+    const receiptTotals = getCategoryTotals(incomeCategories, receiptRows);
+    const expenseTotals = getCategoryTotals(expenseCategories, expenseRows);
+    const receiptTotal = sumValues(receiptTotals);
+    const expenseTotal = sumValues(expenseTotals);
+    const balance = openingBalance + receiptTotal - expenseTotal;
+
+    return { receiptTotals, expenseTotals, receiptTotal, expenseTotal, balance };
+  }, [expenseRows, receiptRows]);
+
+  const exportCsv = () => {
+    const rows = [
+      ["BUKU KAS DAN BANK TABELARIS"],
+      ["GEREJA AMIN JEMAAT TANGERANG RAYA"],
+      [`BULAN: ${selectedMonth.label.toUpperCase()}`, `TAHUN: ${year}`],
+      [],
+      ["PENERIMAAN"],
+      ["Tanggal", "Uraian", "Nomor Bukti", ...incomeCategories, "Jumlah"],
+      ...receiptRows.map((row) => [
+        row.date,
+        row.description,
+        row.proof,
+        ...incomeCategories.map((category) => row.values[category] || 0),
+        getRowTotal(row),
+      ]),
+      ["Jumlah Penerimaan Bulan Ini", "", "", ...incomeCategories.map((category) => totals.receiptTotals[category]), totals.receiptTotal],
+      [],
+      ["PENGELUARAN"],
+      ["Tanggal", "Uraian Pengeluaran", "Nomor Bukti", ...expenseCategories, "Jumlah"],
+      ...expenseRows.map((row) => [
+        row.date,
+        row.description,
+        row.proof,
+        ...expenseCategories.map((category) => row.values[category] || 0),
+        getRowTotal(row),
+      ]),
+      ["Jumlah Pengeluaran Bulan Ini", "", "", ...expenseCategories.map((category) => totals.expenseTotals[category]), totals.expenseTotal],
+      ["Saldo Bulan Lalu", openingBalance],
+      ["Saldo Bulan Ini", totals.balance],
+    ];
+
+    const csv = rows
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([`\ufeff${csv}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `laporan-kas-tabelaris-${selectedMonth.label}-${year}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="space-y-8">
-      <section>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-          Laporan Kas
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
-          Ringkasan laporan keuangan gereja
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-          Halaman ini menampilkan filter laporan, total pemasukan, total pengeluaran,
-          dan daftar transaksi berdasarkan periode tertentu.
-        </p>
-      </section>
+    <div className="space-y-7">
+      <AdminPageHeader
+        eyebrow="Laporan Kas"
+        title="Buku Kas dan Bank Tabelaris"
+        description="Format laporan mengikuti referensi Excel dan sekarang dihitung dari transaksi kas dummy yang sama dengan Cashflow."
+        meta={<StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />}
+        actions={
+          <>
+            <ActionButton icon={Printer} onClick={() => window.print()}>
+              Cetak
+            </ActionButton>
+            <ActionButton variant="primary" icon={FileDown} onClick={exportCsv}>
+              Export CSV
+            </ActionButton>
+          </>
+        }
+      />
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8 dark:border-slate-800 dark:bg-slate-900">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Tanggal Mulai
-            </label>
-            <input
-              type="date"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            />
-          </div>
+      <DataSourceNotice
+        error={dataError}
+        label="laporan kas"
+        loading={dataLoading}
+        source={dataSource}
+      />
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Tanggal Akhir
-            </label>
-            <input
-              type="date"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Jenis Transaksi
-            </label>
-            <select className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white">
-              <option>Semua</option>
-              <option>Kas Masuk</option>
-              <option>Kas Keluar</option>
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <button
-              type="button"
-              className="w-full rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 dark:bg-slate-100 dark:text-slate-900"
-            >
-              Tampilkan Laporan
-            </button>
-          </div>
+      <FilterPanel columns="md:grid-cols-3">
+        <FormField label="Bulan">
+          <select value={month} onChange={(event) => setMonth(event.target.value)} className="input-base">
+            {monthOptions.map((item) => (
+              <option key={item.value} value={item.value}>{item.label}</option>
+            ))}
+          </select>
+        </FormField>
+        <FormField label="Tahun">
+          <input value={year} onChange={(event) => setYear(event.target.value)} className="input-base" />
+        </FormField>
+        <div className="flex items-end">
+          <ActionButton variant="primary" icon={Filter} className="w-full">
+            Periode {selectedMonth.label} {year}
+          </ActionButton>
         </div>
-      </section>
+      </FilterPanel>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {summaryCards.map((item) => (
-          <div
-            key={item.title}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-          >
-            <p className="text-sm text-slate-500 dark:text-slate-400">{item.title}</p>
-            <p className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
-              {item.value}
-            </p>
-          </div>
-        ))}
+        <SummaryCard title="Saldo Bulan Lalu" value={formatCurrency(openingBalance)} description="Saldo awal periode." icon={Wallet} />
+        <SummaryCard title="Penerimaan Bulan Ini" value={formatCurrency(totals.receiptTotal)} description={`${receiptRows.length} transaksi masuk.`} icon={Wallet} tone="success" />
+        <SummaryCard title="Pengeluaran Bulan Ini" value={formatCurrency(totals.expenseTotal)} description={`${expenseRows.length} transaksi keluar.`} icon={Wallet} tone="danger" />
+        <SummaryCard title="Saldo Bulan Ini" value={formatCurrency(totals.balance)} description="Saldo akhir tabelaris." icon={Wallet} />
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-              Detail Laporan
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-              Daftar transaksi
-            </h2>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              Export PDF
-            </button>
-            <button
-              type="button"
-              className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              Export Excel
-            </button>
-          </div>
+      <section className="kkj-print-area print-area brand-card overflow-hidden p-4 md:p-6 print:rounded-none print:border-0 print:p-0 print:shadow-none">
+        <div className="mb-5 text-center text-slate-950 dark:text-white print:text-slate-950">
+          <h2 className="text-xl font-bold uppercase tracking-wide">Buku Kas dan Bank Tabelaris</h2>
+          <p className="mt-1 text-sm font-semibold uppercase">Gereja AMIN Jemaat Tangerang Raya</p>
+          <p className="mt-1 text-sm uppercase">Bulan: {selectedMonth.label} | Tahun: {year}</p>
         </div>
 
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+        <div className="overflow-x-auto">
+          <table className="min-w-[2200px] border-collapse text-left text-[11px] text-slate-950 dark:text-slate-100 print:text-slate-950">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800">
-                <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">
-                  Tanggal
+              <tr>
+                <th colSpan={incomeCategories.length + 4} className="border border-slate-400 bg-violet-50 px-2 py-2 text-center text-sm uppercase print:bg-white">
+                  Penerimaan (Rp)
                 </th>
-                <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">
-                  Jenis
+                <th className="w-3 border-y border-slate-400 bg-slate-100 print:bg-white" />
+                <th colSpan={expenseCategories.length + 4} className="border border-slate-400 bg-cyan-50 px-2 py-2 text-center text-sm uppercase print:bg-white">
+                  Pengeluaran (Rp)
                 </th>
-                <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">
-                  Kategori
-                </th>
-                <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">
-                  Keterangan
-                </th>
-                <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">
-                  Nominal
-                </th>
+              </tr>
+              <tr className="align-bottom">
+                <ReportHead label="Tgl/Bln" rowSpan={2} />
+                <ReportHead label="Uraian" rowSpan={2} />
+                <ReportHead label="Nomor Bukti" rowSpan={2} />
+                {incomeCategories.map((category) => (
+                  <ReportHead key={category} label={category} rotate />
+                ))}
+                <ReportHead label="Jumlah (4 s/d 15)" rowSpan={2} />
+                <th className="border-y border-slate-400 bg-slate-100 print:bg-white" rowSpan={2} />
+                <ReportHead label="Tgl/Bln" rowSpan={2} />
+                <ReportHead label="Uraian Pengeluaran" rowSpan={2} />
+                <ReportHead label="Nomor Bukti" rowSpan={2} />
+                {expenseCategories.map((category) => (
+                  <ReportHead key={category} label={category} rotate />
+                ))}
+                <ReportHead label="Jumlah (17 s/d 30)" rowSpan={2} />
+              </tr>
+              <tr>
+                {incomeCategories.map((category, index) => (
+                  <ReportNumber key={category} value={index + 4} />
+                ))}
+                {expenseCategories.map((category, index) => (
+                  <ReportNumber key={category} value={index + 20} />
+                ))}
               </tr>
             </thead>
             <tbody>
-              {reportRows.map((item, index) => (
-                <tr
-                  key={`${item.date}-${item.category}-${index}`}
-                  className="border-b border-slate-100 dark:border-slate-800"
-                >
-                  <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{item.date}</td>
-                  <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{item.type}</td>
-                  <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{item.category}</td>
-                  <td className="px-3 py-4 text-slate-700 dark:text-slate-200">
-                    {item.description}
-                  </td>
-                  <td className="px-3 py-4 font-semibold text-slate-900 dark:text-white">
-                    {item.amount}
-                  </td>
-                </tr>
-              ))}
+              {Array.from({ length: Math.max(receiptRows.length, expenseRows.length, 1) }).map((_, index) => {
+                const receipt = receiptRows[index];
+                const expense = expenseRows[index];
+
+                return (
+                  <tr key={`report-row-${index}`} className="align-top">
+                    <ReportCell>{receipt?.date || ""}</ReportCell>
+                    <ReportCell>{receipt?.description || ""}</ReportCell>
+                    <ReportCell>{receipt?.proof || ""}</ReportCell>
+                    {incomeCategories.map((category) => (
+                      <ReportMoney key={category} value={receipt?.values[category]} />
+                    ))}
+                    <ReportMoney value={receipt ? getRowTotal(receipt) : 0} strong />
+                    <td className="border-y border-slate-300 bg-slate-50 print:bg-white" />
+                    <ReportCell>{expense?.date || ""}</ReportCell>
+                    <ReportCell>{expense?.description || ""}</ReportCell>
+                    <ReportCell>{expense?.proof || ""}</ReportCell>
+                    {expenseCategories.map((category) => (
+                      <ReportMoney key={category} value={expense?.values[category]} />
+                    ))}
+                    <ReportMoney value={expense ? getRowTotal(expense) : 0} strong />
+                  </tr>
+                );
+              })}
+
+              <tr className="font-bold">
+                <ReportCell colSpan={3}>Jumlah Penerimaan Bulan ini</ReportCell>
+                {incomeCategories.map((category) => (
+                  <ReportMoney key={category} value={totals.receiptTotals[category]} strong />
+                ))}
+                <ReportMoney value={totals.receiptTotal} strong />
+                <td className="border-y border-slate-400 bg-slate-50 print:bg-white" />
+                <ReportCell colSpan={3}>Jumlah Pengeluaran Bulan ini</ReportCell>
+                {expenseCategories.map((category) => (
+                  <ReportMoney key={category} value={totals.expenseTotals[category]} strong />
+                ))}
+                <ReportMoney value={totals.expenseTotal} strong />
+              </tr>
             </tbody>
           </table>
+        </div>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+          <div className="rounded-2xl border border-violet-100 p-5 print:border-slate-400">
+            <p className="text-sm leading-7 text-slate-700 dark:text-slate-200 print:text-slate-950">
+              Pada akhir periode {selectedMonth.label} {year}, Kas Umum ditutup dengan keadaan:
+            </p>
+            <table className="mt-4 min-w-full border-collapse text-sm">
+              <tbody>
+                <SummaryRow label="Jumlah Penerimaan bulan ini dan saldo bulan lalu" value={openingBalance + totals.receiptTotal} />
+                <SummaryRow label="Jumlah Pengeluaran bulan ini" value={totals.expenseTotal} />
+                <SummaryRow label="Total Saldo Rekening Kas Jemaat" value={totals.balance} strong />
+              </tbody>
+            </table>
+          </div>
+
+          <div className="rounded-2xl border border-violet-100 p-5 text-center print:border-slate-400">
+            <p className="text-sm font-semibold uppercase text-slate-950 dark:text-white print:text-slate-950">
+              Badan Pekerja Harian Majelis Jemaat Tangerang Raya
+            </p>
+            <div className="mt-12 grid gap-8 sm:grid-cols-2">
+              <Signature name="SNK. KECITAAN HAREFA, S.Kom., M.Kom" role="Ketua I" />
+              <Signature name="SNK. MARETI WARUWU, S.H., M.H." role="Bendahara" />
+            </div>
+          </div>
         </div>
       </section>
     </div>
   );
+}
+
+function ReportHead({ label, rotate = false, rowSpan }) {
+  return (
+    <th
+      rowSpan={rowSpan}
+      className={`border border-slate-400 bg-violet-50 px-2 py-2 text-center font-semibold print:bg-white ${
+        rotate ? "min-w-24 max-w-28 align-bottom text-[10px] leading-4" : "min-w-20"
+      }`}
+    >
+      {label}
+    </th>
+  );
+}
+
+function ReportNumber({ value }) {
+  return (
+    <th className="border border-slate-400 px-2 py-1 text-center font-semibold">
+      {value}
+    </th>
+  );
+}
+
+function ReportCell({ children, colSpan = 1 }) {
+  return (
+    <td colSpan={colSpan} className="border border-slate-300 px-2 py-2">
+      {children}
+    </td>
+  );
+}
+
+function ReportMoney({ value = 0, strong = false }) {
+  return (
+    <td className={`border border-slate-300 px-2 py-2 text-right ${strong ? "font-bold" : ""}`}>
+      {value ? formatNumber(value) : "-"}
+    </td>
+  );
+}
+
+function SummaryRow({ label, value, strong = false }) {
+  return (
+    <tr className={strong ? "font-bold" : ""}>
+      <td className="border border-slate-300 px-3 py-2 text-slate-700 dark:text-slate-200 print:text-slate-950">
+        {label}
+      </td>
+      <td className="border border-slate-300 px-3 py-2 text-right text-slate-950 dark:text-white print:text-slate-950">
+        {formatCurrency(value)}
+      </td>
+    </tr>
+  );
+}
+
+function Signature({ name, role }) {
+  return (
+    <div>
+      <div className="h-16" />
+      <p className="text-sm font-bold text-slate-950 dark:text-white print:text-slate-950">{name}</p>
+      <p className="text-sm text-slate-600 dark:text-slate-300 print:text-slate-950">{role}</p>
+    </div>
+  );
+}
+
+function buildReportRows(transactions, type, categories) {
+  return transactions
+    .filter((item) => item.type === type)
+    .map((item) => {
+      const category = categories.includes(item.category) ? item.category : categories.at(-1);
+      return {
+        date: formatShortFinanceDate(item.date).toUpperCase(),
+        description: item.description || item.category,
+        proof: item.proof || "-",
+        values: {
+          [category]: item.amount,
+        },
+      };
+    });
+}
+
+function getCategoryTotals(categories, rows) {
+  return categories.reduce((acc, category) => {
+    acc[category] = rows.reduce((total, row) => total + (row.values[category] || 0), 0);
+    return acc;
+  }, {});
+}
+
+function getRowTotal(row) {
+  return Object.values(row.values).reduce((total, value) => total + value, 0);
+}
+
+function sumValues(values) {
+  return Object.values(values).reduce((total, value) => total + value, 0);
 }

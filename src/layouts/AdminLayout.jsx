@@ -1,17 +1,25 @@
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ExternalLink, LogOut, Menu } from "lucide-react";
+import BrandLogo from "../components/BrandLogo";
 import Sidebar from "../components/Sidebar";
 import ThemeToggle from "../components/ThemeToggle";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/authContextValue";
+import { getRoleLabel } from "../data/adminAccess";
 
 function getPageTitle(pathname) {
   if (pathname.startsWith("/admin/dashboard")) return "Dashboard";
   if (pathname.startsWith("/admin/cashflow")) return "Cashflow";
   if (pathname.startsWith("/admin/income")) return "Kas Masuk";
   if (pathname.startsWith("/admin/expense")) return "Kas Keluar";
-  if (pathname.startsWith("/admin/reports")) return "Laporan";
-  if (pathname.startsWith("/admin/articles")) return "Artikel";
+  if (pathname.startsWith("/admin/reports")) return "Laporan Kas";
+  if (pathname.startsWith("/admin/articles")) return "Publikasi";
+  if (pathname.startsWith("/admin/content")) return "Konten Website";
+  if (pathname.includes("/kkj")) return "Preview KKJ";
+  if (pathname.startsWith("/admin/jemaat/keluarga")) return "Data Keluarga";
+  if (pathname.startsWith("/admin/jemaat/individu-mandiri")) return "Individu Mandiri";
+  if (pathname.startsWith("/admin/jemaat/individu")) return "Data Individu";
+  if (pathname.startsWith("/admin/jemaat")) return "Modul Jemaat";
   return "Admin Panel";
 }
 
@@ -29,49 +37,53 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="min-h-screen text-slate-900 dark:text-slate-100">
       <div className="flex min-h-screen">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
-            <div className="flex items-center justify-between gap-4 px-4 py-4 md:px-6">
-              <div className="flex items-center gap-3">
+          <header className="sticky top-0 z-30 border-b border-violet-100 bg-white/90 backdrop-blur print:hidden dark:border-violet-950/60 dark:bg-[#111018]/90">
+            <div className="flex flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
+              <div className="flex min-w-0 items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(true)}
-                  className="rounded-xl border border-slate-300 p-2 md:hidden dark:border-slate-700"
-                  aria-label="Open sidebar"
+                  className="brand-button-secondary rounded-xl p-2 text-slate-700 md:hidden dark:text-slate-200"
+                  aria-label="Buka sidebar"
                 >
                   <Menu size={20} />
                 </button>
 
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-                    Admin
+                <div className="block">
+                  <BrandLogo size="sm" showText={false} />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="brand-eyebrow text-xs font-semibold uppercase tracking-[0.2em]">
+                    Admin Gereja
                   </p>
-                  <h1 className="text-lg font-bold text-slate-900 md:text-2xl dark:text-white">
+                  <h1 className="truncate text-lg font-bold text-slate-950 md:text-2xl dark:text-white">
                     {pageTitle}
                   </h1>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="hidden text-right sm:block">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+              <div className="flex items-center justify-between gap-2 md:justify-end md:gap-3">
+                <div className="min-w-0 rounded-xl border border-violet-100 bg-violet-50 px-3 py-2 dark:border-violet-950/60 dark:bg-violet-950/20">
+                  <p className="truncate text-sm font-semibold text-slate-950 dark:text-white">
                     {user?.name || "Admin Gereja"}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {user?.email || "admin@gerejaamin.org"}
+                    {getRoleLabel(user?.role)}
                   </p>
                 </div>
 
                 <Link
                   to="/"
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="brand-button-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition"
                 >
                   <ExternalLink size={16} />
-                  <span className="hidden sm:inline">Lihat Website</span>
+                  <span className="hidden lg:inline">Website</span>
                 </Link>
 
                 <ThemeToggle />
@@ -79,16 +91,17 @@ export default function AdminLayout() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="brand-button-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition"
+                  aria-label="Logout"
                 >
                   <LogOut size={16} />
-                  <span className="hidden sm:inline">Logout</span>
+                  <span className="hidden lg:inline">Logout</span>
                 </button>
               </div>
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 md:px-6 md:py-8">
+          <main className="flex-1 px-4 py-6 md:px-6 md:py-8 print:p-0">
             <Outlet />
           </main>
         </div>

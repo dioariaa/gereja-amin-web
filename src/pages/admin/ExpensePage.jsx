@@ -1,190 +1,216 @@
-const recentExpense = [
-  {
-    date: "21 Mei 2026",
-    category: "Operasional Gereja",
-    recipient: "Toko Sinar Jaya",
-    amount: "Rp 750.000",
-    status: "Selesai",
-  },
-  {
-    date: "19 Mei 2026",
-    category: "Kegiatan Pemuda",
-    recipient: "Panitia Pemuda",
-    amount: "Rp 500.000",
-    status: "Pending",
-  },
-  {
-    date: "17 Mei 2026",
-    category: "Diakonia",
-    recipient: "Bantuan Jemaat",
-    amount: "Rp 1.000.000",
-    status: "Selesai",
-  },
-];
+import { useMemo, useState } from "react";
+import { ArrowLeft, ArrowUpCircle, Save } from "lucide-react";
+import ActionButton from "../../components/admin/ActionButton";
+import AdminPageHeader from "../../components/admin/AdminPageHeader";
+import DataTable from "../../components/admin/DataTable";
+import DataSourceNotice from "../../components/admin/DataSourceNotice";
+import FormField from "../../components/admin/FormField";
+import StatusBadge from "../../components/admin/StatusBadge";
+import {
+  cashAccounts,
+  createExpenseTransactionInSupabase,
+  createFinanceTransaction,
+  expenseCategories,
+  formatCurrency,
+  formatFinanceDate,
+  getRecentFinanceTransactions,
+  listFinanceTransactions,
+  transactionStatuses,
+} from "../../services/financeService";
+import { isSupabaseConfigured } from "../../lib/supabase";
+import useFinanceTransactions from "../../hooks/useFinanceTransactions";
+
+const today = new Date().toISOString().slice(0, 10);
+
+const emptyForm = {
+  date: today,
+  account: "Kas Umum",
+  category: expenseCategories[0],
+  actor: "",
+  amount: "",
+  status: "Selesai",
+  proof: "",
+  description: "",
+};
 
 export default function ExpensePage() {
+  const {
+    error: dataError,
+    loading: dataLoading,
+    setTransactions,
+    source: dataSource,
+    transactions,
+  } = useFinanceTransactions();
+  const [form, setForm] = useState(emptyForm);
+  const [message, setMessage] = useState("");
+
+  const recentExpense = useMemo(
+    () =>
+      transactions
+        ? getRecentFinanceTransactions(listFinanceTransactions(transactions), "Keluar")
+        : [],
+    [transactions]
+  );
+
+  const updateForm = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setMessage("");
+
+    const amount = Number(form.amount);
+    if (!form.date || !amount || amount <= 0) {
+      setMessage("Tanggal dan nominal wajib diisi dengan benar.");
+      return;
+    }
+
+    const sequence = transactions.length + 1;
+    const formForSave = {
+      ...form,
+      proof: form.proof || `KK-${String(sequence).padStart(3, "0")}`,
+    };
+    let nextTransaction = createFinanceTransaction("Keluar", formForSave, sequence);
+
+    if (isSupabaseConfigured) {
+      try {
+        nextTransaction = await createExpenseTransactionInSupabase(formForSave);
+        setMessage("Kas keluar berhasil ditambahkan ke Supabase.");
+      } catch (saveError) {
+        setMessage(
+          `${saveError.message || "Supabase belum menerima kas keluar."} Transaksi disimpan lokal untuk demo.`
+        );
+      }
+    } else {
+      setMessage("Kas keluar berhasil ditambahkan ke data dummy.");
+    }
+
+    setTransactions((prev) => [nextTransaction, ...prev]);
+    setForm({ ...emptyForm, date: form.date });
+  };
+
   return (
-    <div className="space-y-8">
-      <section>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-          Kas Keluar
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
-          Input transaksi kas keluar
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-          Catat pengeluaran gereja seperti operasional, kegiatan pelayanan, diakonia,
-          pembangunan, dan kebutuhan lainnya dengan data yang terstruktur.
-        </p>
-      </section>
+    <div className="space-y-7">
+      <AdminPageHeader
+        eyebrow="Kas Keluar"
+        title="Input transaksi kas keluar"
+        description="Catat pengeluaran gereja seperti operasional, pelayanan komisi, diakonia, dan pembayaran sinode sesuai format tabelaris."
+        meta={<StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />}
+        actions={<ActionButton to="/admin/cashflow" icon={ArrowLeft}>Kembali</ActionButton>}
+      />
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Form Kas Keluar</h2>
+      <DataSourceNotice
+        error={dataError}
+        label="kas keluar"
+        loading={dataLoading}
+        source={dataSource}
+      />
 
-        <form className="mt-6 grid gap-5 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Tanggal Transaksi
-            </label>
-            <input
-              type="date"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            />
+      <section className="brand-card p-5 md:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
+              <ArrowUpCircle size={20} />
+            </div>
+            <div>
+              <p className="brand-eyebrow text-xs font-semibold uppercase tracking-[0.2em]">
+                Form Transaksi
+              </p>
+              <h2 className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">
+                Form Kas Keluar
+              </h2>
+            </div>
           </div>
+          <StatusBadge value="Dummy LocalStorage" />
+        </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Akun Kas
-            </label>
-            <select className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white">
-              <option>Kas Umum</option>
-              <option>Kas Pembangunan</option>
-              <option>Kas Diakonia</option>
-              <option>Kas Pemuda</option>
+        {message ? (
+          <div className="mt-5 rounded-2xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-800 dark:border-violet-950/60 dark:bg-violet-950/30 dark:text-violet-100">
+            {message}
+          </div>
+        ) : null}
+
+        <form className="mt-6 grid gap-5 md:grid-cols-2" onSubmit={handleSubmit}>
+          <FormField label="Tanggal Transaksi">
+            <input type="date" name="date" value={form.date} onChange={updateForm} className="input-base" />
+          </FormField>
+          <FormField label="Akun Kas">
+            <select name="account" value={form.account} onChange={updateForm} className="input-base">
+              {cashAccounts.map((account) => (
+                <option key={account}>{account}</option>
+              ))}
             </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Kategori
-            </label>
-            <select className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white">
-              <option>Operasional Gereja</option>
-              <option>Kegiatan Pelayanan</option>
-              <option>Diakonia</option>
-              <option>Pembangunan</option>
-              <option>Kegiatan Pemuda</option>
+          </FormField>
+          <FormField label="Kategori">
+            <select name="category" value={form.category} onChange={updateForm} className="input-base">
+              {expenseCategories.map((category) => (
+                <option key={category}>{category}</option>
+              ))}
             </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Penerima
-            </label>
-            <input
-              type="text"
-              placeholder="Contoh: Vendor / Toko / Jemaat"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Nominal
-            </label>
-            <input
-              type="number"
-              placeholder="Masukkan nominal"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Status
-            </label>
-            <select className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white">
-              <option>Draft</option>
-              <option>Pending</option>
-              <option>Selesai</option>
+          </FormField>
+          <FormField label="Penerima">
+            <input name="actor" value={form.actor} onChange={updateForm} type="text" placeholder="Contoh: Vendor / Pengurus / Sinode" className="input-base" />
+          </FormField>
+          <FormField label="Nominal">
+            <input name="amount" value={form.amount} onChange={updateForm} type="number" min="0" placeholder="Masukkan nominal" className="input-base text-lg font-semibold" />
+          </FormField>
+          <FormField label="Status">
+            <select name="status" value={form.status} onChange={updateForm} className="input-base">
+              {transactionStatuses.map((status) => (
+                <option key={status}>{status}</option>
+              ))}
             </select>
-          </div>
+          </FormField>
+          <FormField label="Nomor Bukti">
+            <input name="proof" value={form.proof} onChange={updateForm} placeholder="Contoh: KK-005" className="input-base" />
+          </FormField>
+          <FormField label="Keterangan">
+            <input name="description" value={form.description} onChange={updateForm} placeholder="Tulis keterangan singkat" className="input-base" />
+          </FormField>
 
-          <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Keterangan
-            </label>
-            <textarea
-              rows="4"
-              placeholder="Tulis keterangan transaksi"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-              Upload Bukti Transaksi
-            </label>
-            <input
-              type="file"
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-white dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:file:bg-slate-100 dark:file:text-slate-900"
-            />
-          </div>
-
-          <div className="md:col-span-2 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="submit"
-              className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
-            >
+          <div className="flex flex-col gap-3 sm:flex-row md:col-span-2">
+            <button type="submit" className="brand-button-primary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition">
+              <Save size={17} />
               Simpan Kas Keluar
             </button>
-            <a
-              href="/admin/cashflow"
-              className="rounded-xl border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200"
-            >
-              Kembali
-            </a>
+            <ActionButton to="/admin/cashflow" icon={ArrowLeft}>Kembali ke Cashflow</ActionButton>
           </div>
         </form>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Transaksi Kas Keluar Terbaru
-        </h2>
-
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800">
-                <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Tanggal</th>
-                <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Kategori</th>
-                <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Penerima</th>
-                <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Nominal</th>
-                <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Status</th>
+      <DataTable eyebrow="Kas Keluar Terbaru" title="Transaksi pengeluaran terakhir">
+        <table className="min-w-[760px] text-left text-sm">
+          <thead>
+            <tr className="border-b border-slate-200 dark:border-slate-800">
+              <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Tanggal</th>
+              <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Kategori</th>
+              <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Penerima</th>
+              <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Nominal</th>
+              <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentExpense.map((item) => (
+              <tr key={item.id} className="brand-table-row border-b border-slate-100 transition dark:border-slate-800">
+                <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{formatFinanceDate(item.date)}</td>
+                <td className="px-3 py-4 font-medium text-slate-900 dark:text-white">{item.category}</td>
+                <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{item.actor}</td>
+                <td className="px-3 py-4 text-right font-bold text-slate-950 dark:text-white">{formatCurrency(item.amount)}</td>
+                <td className="px-3 py-4"><StatusBadge value={item.status} /></td>
               </tr>
-            </thead>
-            <tbody>
-              {recentExpense.map((item, index) => (
-                <tr
-                  key={`${item.date}-${item.category}-${index}`}
-                  className="border-b border-slate-100 dark:border-slate-800"
-                >
-                  <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{item.date}</td>
-                  <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{item.category}</td>
-                  <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{item.recipient}</td>
-                  <td className="px-3 py-4 font-semibold text-slate-900 dark:text-white">{item.amount}</td>
-                  <td className="px-3 py-4">
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                      {item.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+            ))}
+            {recentExpense.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-3 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                  Belum ada transaksi kas keluar yang tersimpan.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </DataTable>
     </div>
   );
 }

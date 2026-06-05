@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 286" role="img" aria-labelledby="title desc">
+  <title id="title">Logo Gereja AMIN</title>
+  <desc id="desc">Logo Gereja AMIN dengan salib ungu, merpati merah, dan globe.</desc>
+  <rect width="220" height="286" rx="0" fill="#ffffff"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M101 17h40v74h70v38h-70v82h-40v-82H31V91h70z" fill="#9f7bb9"/>
+    <path d="M32 58h42m80 0h38" stroke="#22232a" stroke-width="4"/>
+    <text x="32" y="68" fill="#22232a" font-family="Arial, Helvetica, sans-serif" font-size="28" letter-spacing="3" stroke="none">YOH</text>
+    <text x="155" y="68" fill="#22232a" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" letter-spacing="2" stroke="none">17:3</text>
+    <path d="M151 96c11 12 20 17 35 15-8 7-15 11-25 13 5 9 4 18-3 25-5-12-13-20-27-25-1 12-8 20-20 24 8-13 11-27 6-43 12 5 21 4 34-9z" stroke="#d81724" stroke-width="5"/>
+    <g stroke="#202126" stroke-width="3">
+      <path d="M17 218c0-49 42-89 93-89s93 40 93 89-42 51-93 51-93-2-93-51z"/>
+      <path d="M18 217h184"/>
+      <path d="M34 176c20 18 47 27 76 27s56-9 76-27"/>
+      <path d="M34 257c20-17 47-25 76-25s56 8 76 25"/>
+      <path d="M110 129v140"/>
+      <path d="M75 138c-22 37-24 83-8 124"/>
+      <path d="M145 138c22 37 24 83 8 124"/>
+      <path d="M48 153c38 20 86 20 124 0"/>
+      <path d="M48 266c38-18 86-18 124 0"/>
+      <path d="M17 218h-11"/>
+      <path d="M203 218h11"/>
+    </g>
+    <text x="110" y="225" fill="#28a9c8" font-family="Georgia, 'Times New Roman', serif" font-size="27" font-weight="700" text-anchor="middle" stroke="none">GEREJA AMIN</text>
+  </g>
+</svg>
