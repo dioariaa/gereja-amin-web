@@ -38,7 +38,7 @@ export const expenseCategories = [
   "Pembayaran ke Sinode",
 ];
 
-export const openingBalance = 10000000;
+export const openingBalance = 0;
 
 export const financeTransactionsSeed = [
   {
@@ -166,7 +166,7 @@ export function normalizeFinanceTransaction(transaction) {
   };
 }
 
-export function getFinanceSummary(transactions) {
+export function getFinanceSummary(transactions, initialBalance = openingBalance) {
   const normalized = transactions.map(normalizeFinanceTransaction);
   const totalIncome = normalized
     .filter((item) => item.type === "Masuk")
@@ -178,7 +178,7 @@ export function getFinanceSummary(transactions) {
   return {
     totalIncome,
     totalExpense,
-    balance: openingBalance + totalIncome - totalExpense,
+    balance: initialBalance + totalIncome - totalExpense,
     count: normalized.length,
   };
 }
@@ -212,4 +212,3 @@ export function formatNumber(value) {
 export function formatCurrency(value) {
   return `Rp ${formatNumber(value)}`;
 }
-

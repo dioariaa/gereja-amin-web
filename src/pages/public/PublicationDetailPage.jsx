@@ -1,35 +1,39 @@
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, PenLine } from "lucide-react";
-import PublicAdminActionBar from "../../components/public/PublicAdminActionBar";
+import { PublicAdminShortcut } from "../../components/public/PublicAdminActionBar";
 import { MediaFrame } from "../../components/public/PublicContent";
 import {
-  PUBLICATIONS_STORAGE_KEY,
   findPublicationBySlug,
   formatPublicDate,
-  publicationSeed,
+  getPublicationCommission,
 } from "../../services/publicationsService";
-import useLocalStorageState from "../../hooks/useLocalStorageState";
+import {
+  listCommissions,
+} from "../../services/commissionsService";
+import {
+  useCommissionsCms,
+  usePublicationsCms,
+} from "../../hooks/usePublicCmsData";
 
 export default function PublicationDetailPage() {
   const { slug } = useParams();
-  const [publications] = useLocalStorageState(PUBLICATIONS_STORAGE_KEY, publicationSeed);
+  const [publications] = usePublicationsCms();
+  const [commissionItems] = useCommissionsCms();
   const publication = findPublicationBySlug(publications, slug);
+  const commissions = listCommissions(commissionItems)
+    .filter((item) => item.status !== "Draft" && item.status !== "Arsip");
+  const relatedCommission = getPublicationCommission(publication, commissions);
 
   if (!publication) {
     return (
       <div className="space-y-8">
-        <PublicAdminActionBar
-          title="Kelola publikasi"
-          description="Publikasi tidak ditemukan di data dummy. Admin dapat kembali ke daftar publikasi untuk mengecek slug."
-          actions={[
-            {
-              label: "Kelola Publikasi",
-              to: "/admin/articles",
-              icon: ArrowLeft,
-              variant: "primary",
-            },
-          ]}
-        />
+        <div className="flex justify-end">
+          <PublicAdminShortcut
+            to="/admin/articles"
+            label="Kelola Publikasi"
+            icon={PenLine}
+          />
+        </div>
 
         <section className="brand-card p-6 md:p-8">
           <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
@@ -60,23 +64,13 @@ export default function PublicationDetailPage() {
 
   return (
     <div className="space-y-8">
-      <PublicAdminActionBar
-        title="Kelola detail publikasi"
-        description="Aksi cepat untuk mengedit publikasi yang sedang dilihat atau kembali ke daftar publikasi admin."
-        actions={[
-          {
-            label: "Edit Publikasi",
-            to: `/admin/articles?edit=${slug || "publikasi"}`,
-            icon: PenLine,
-            variant: "primary",
-          },
-          {
-            label: "Kelola Publikasi",
-            to: "/admin/articles",
-            icon: ArrowLeft,
-          },
-        ]}
-      />
+      <div className="flex justify-end">
+        <PublicAdminShortcut
+          to={`/admin/articles?edit=${slug || "publikasi"}`}
+          label="Edit Publikasi"
+          icon={PenLine}
+        />
+      </div>
 
       <article className="brand-card overflow-hidden">
         <MediaFrame
@@ -97,6 +91,14 @@ export default function PublicationDetailPage() {
             <span className="inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
               {publication.category}
             </span>
+            {relatedCommission ? (
+              <Link
+                to={`/komisi/${relatedCommission.slug}`}
+                className="inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 transition hover:bg-cyan-100 dark:bg-cyan-950/30 dark:text-cyan-200 dark:hover:bg-cyan-950/50"
+              >
+                {relatedCommission.shortName || relatedCommission.name}
+              </Link>
+            ) : null}
             <span className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <CalendarDays size={16} />
               {formatPublicDate(publication.date)}
@@ -116,6 +118,14 @@ export default function PublicationDetailPage() {
           <p className="mt-4 text-sm font-semibold text-slate-500 dark:text-slate-400">
             {publication.author || "Sekretariat Gereja"}
           </p>
+          {relatedCommission ? (
+            <Link
+              to={`/komisi/${relatedCommission.slug}`}
+              className="brand-link mt-5 inline-flex items-center gap-2 text-sm font-semibold underline underline-offset-4"
+            >
+              Lihat profil {relatedCommission.shortName || relatedCommission.name}
+            </Link>
+          ) : null}
         </div>
 
         <div className="px-6 py-8 md:px-10 md:py-10">

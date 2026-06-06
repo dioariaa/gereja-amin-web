@@ -11,6 +11,7 @@ import PublicationDetailPage from "../pages/public/PublicationDetailPage";
 import CommissionsPage from "../pages/public/CommissionsPage";
 import CommissionDetailPage from "../pages/public/CommissionDetailPage";
 import SchedulePage from "../pages/public/SchedulePage";
+import ScheduleDetailPage from "../pages/public/ScheduleDetailPage";
 import GalleryPage from "../pages/public/GalleryPage";
 import ContactPage from "../pages/public/ContactPage";
 
@@ -40,6 +41,7 @@ export default function AppRoutes() {
         <Route path="/komisi" element={<CommissionsPage />} />
         <Route path="/komisi/:slug" element={<CommissionDetailPage />} />
         <Route path="/jadwal-ibadah" element={<SchedulePage />} />
+        <Route path="/jadwal-ibadah/:scheduleId" element={<ScheduleDetailPage />} />
         <Route path="/galeri" element={<GalleryPage />} />
         <Route path="/kontak" element={<ContactPage />} />
       </Route>
@@ -61,6 +63,14 @@ export default function AppRoutes() {
           element={
             <RoleRoute allowedRoles={accessGroups.content}>
               <ArticlesPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="content"
+          element={
+            <RoleRoute allowedRoles={accessGroups.content}>
+              <Navigate to="/admin/content/home" replace />
             </RoleRoute>
           }
         />

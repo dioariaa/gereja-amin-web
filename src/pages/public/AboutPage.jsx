@@ -1,14 +1,12 @@
 import { useState } from "react";
-import { Church, Compass, Info, Settings, User } from "lucide-react";
+import { Church, Compass, Info, User } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
-import PublicAdminActionBar from "../../components/public/PublicAdminActionBar";
+import { PublicAdminShortcut } from "../../components/public/PublicAdminActionBar";
 import { InfoCard, SectionHeader } from "../../components/public/PublicContent";
 import {
-  aboutTimeline,
-  aboutValues,
   churchInfo,
-  sectorProfiles,
-} from "../../data/publicContentData";
+} from "../../services/publicContentService";
+import { useAboutContentCms } from "../../hooks/usePublicCmsData";
 
 function PersonCard({ role, name, photo = "" }) {
   const [hasPhoto, setHasPhoto] = useState(Boolean(photo));
@@ -44,6 +42,7 @@ function PersonCard({ role, name, photo = "" }) {
 }
 
 export default function AboutPage() {
+  const [aboutContent] = useAboutContentCms();
   const bphmj = [
     ["Pendeta Jemaat", "Pdt. Niatmawati Fakho, S.Th.", "/images/pengurus/niatmawati-fakho.jpg"],
     ["Ketua I", "SNK. Kecitaan Harefa, S.Kom., M.Kom.", "/images/pengurus/kecitaan-harefa.jpg"],
@@ -80,35 +79,24 @@ export default function AboutPage() {
 
   return (
     <div className="space-y-10">
-      <PublicAdminActionBar
-        title="Kelola halaman tentang gereja"
-        description="Aksi untuk mengatur profil gereja, sejarah, pengurus, sektor, dan komisi yang tampil di public."
-        actions={[
-          {
-            label: "Kelola Tentang Kami",
-            to: "/admin/content/about",
-            icon: Info,
-            variant: "primary",
-          },
-          {
-            label: "Kelola Pengurus / Sektor",
-            to: "/admin/content/leadership",
-            icon: Settings,
-          },
-        ]}
-      />
+      <div className="flex justify-end">
+        <PublicAdminShortcut
+          to="/admin/content/about"
+          label="Edit Tentang Kami"
+          icon={Info}
+        />
+      </div>
 
       <section className="brand-card rounded-3xl px-6 py-10 md:px-10 md:py-14">
         <BrandLogo size="lg" subtitle="Tangerang Raya" />
         <p className="brand-eyebrow mt-8 text-sm font-semibold uppercase tracking-[0.22em]">
-          Tentang Kami
+          {aboutContent.pageEyebrow}
         </p>
         <h1 className="mt-3 max-w-4xl text-3xl font-bold text-slate-950 md:text-5xl dark:text-white">
-          Gereja AMIN Jemaat Tangerang Raya
+          {aboutContent.title}
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 md:text-base dark:text-slate-300">
-          Gereja AMIN Jemaat Tangerang Raya hadir untuk membangun jemaat yang
-          tangguh dalam iman, mandiri dalam pelayanan, dan peduli terhadap sesama.
+          {aboutContent.summary}
         </p>
         <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
           {churchInfo.tagline}
@@ -130,14 +118,11 @@ export default function AboutPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <InfoPanel title="Ringkasan Sejarah" eyebrow="Sejarah Jemaat">
-          Gereja AMIN Jemaat Tangerang Raya berdiri pada {churchInfo.founded} dan
-          tercatat sebagai anggota {churchInfo.synod} dengan Nomor Anggota {churchInfo.memberNumber}.
-          Jemaat ini hadir untuk membangun ibadah, pembinaan rohani, persekutuan,
-          dan pelayanan kasih secara berkelanjutan.
+        <InfoPanel title={aboutContent.historyTitle} eyebrow="Sejarah Jemaat">
+          {aboutContent.historyBody}
         </InfoPanel>
-        <InfoPanel title="Kontak dan Lokasi" eyebrow="Informasi Gereja">
-          {churchInfo.address}. Telepon: {churchInfo.phone}. Email: {churchInfo.email}.
+        <InfoPanel title={aboutContent.contactTitle} eyebrow="Informasi Gereja">
+          {aboutContent.contactBody}
         </InfoPanel>
       </section>
 
@@ -148,7 +133,7 @@ export default function AboutPage() {
           description="Nilai ini menjadi bahasa bersama dalam ibadah, pembinaan keluarga, dan pelayanan lintas komisi."
         />
         <div className="grid gap-5 md:grid-cols-3">
-          {aboutValues.map((item) => (
+          {(aboutContent.values || []).map((item) => (
             <InfoCard
               key={item.title}
               icon={Compass}
@@ -166,7 +151,7 @@ export default function AboutPage() {
           description="Timeline ini membantu pengunjung memahami konteks pertumbuhan Gereja AMIN Jemaat Tangerang Raya."
         />
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {aboutTimeline.map((item) => (
+          {(aboutContent.timeline || []).map((item) => (
             <div
               key={item.title}
               className="rounded-2xl border border-violet-100 bg-violet-50/40 p-5 dark:border-violet-950/60 dark:bg-violet-950/20"
@@ -194,7 +179,7 @@ export default function AboutPage() {
           description="Sektor membantu koordinasi ibadah keluarga, perhatian pastoral, dan komunikasi jemaat."
         />
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {sectorProfiles.map((sector) => (
+          {(aboutContent.sectors || []).map((sector) => (
             <InfoCard
               key={sector.name}
               icon={Church}

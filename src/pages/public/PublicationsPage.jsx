@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, FileText, Plus, Search } from "lucide-react";
-import PublicAdminActionBar from "../../components/public/PublicAdminActionBar";
+import { CalendarDays, Search } from "lucide-react";
 import {
   EmptyPublicState,
   MediaFrame,
@@ -9,19 +8,29 @@ import {
   SectionHeader,
 } from "../../components/public/PublicContent";
 import {
-  PUBLICATIONS_STORAGE_KEY,
   filterPublicationsByCategory,
   formatPublicDate,
+  getPublicationCommissionLabel,
   getPublicationCategories,
   listActivePublications,
   publicationSeed,
 } from "../../services/publicationsService";
-import useLocalStorageState from "../../hooks/useLocalStorageState";
+import { listCommissions } from "../../services/commissionsService";
+import {
+  useCommissionsCms,
+  usePublicationsCms,
+} from "../../hooks/usePublicCmsData";
 
 export default function PublicationsPage() {
-  const [publications] = useLocalStorageState(PUBLICATIONS_STORAGE_KEY, publicationSeed);
+  const [publications] = usePublicationsCms();
+  const [commissionItems] = useCommissionsCms();
   const [activeFilter, setActiveFilter] = useState("Semua");
   const [query, setQuery] = useState("");
+  const commissions = useMemo(
+    () => listCommissions(commissionItems)
+      .filter((item) => item.status !== "Draft" && item.status !== "Arsip"),
+    [commissionItems]
+  );
   const publicPublications = useMemo(
     () => listActivePublications(publications),
     [publications]
@@ -33,34 +42,23 @@ export default function PublicationsPage() {
     if (!normalizedQuery) return filtered;
 
     return filtered.filter((item) =>
-      [item.title, item.excerpt, item.category, item.author]
+      [
+        item.title,
+        item.excerpt,
+        item.category,
+        item.author,
+        getPublicationCommissionLabel(item, commissions),
+      ]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(normalizedQuery))
     );
-  }, [activeFilter, publications, query]);
+  }, [activeFilter, commissions, publications, query]);
   const featuredPost = publicPublications[0] || publications[0] || publicationSeed[0];
   const filters = getPublicationCategories(publications);
+  const featuredCommissionLabel = getPublicationCommissionLabel(featuredPost, commissions);
 
   return (
     <div className="space-y-10">
-      <PublicAdminActionBar
-        title="Kelola publikasi gereja"
-        description="Tambah atau edit warta jemaat, renungan, dan buletin khotbah dari panel admin."
-        actions={[
-          {
-            label: "Tambah Publikasi",
-            to: "/admin/articles?action=create",
-            icon: Plus,
-            variant: "primary",
-          },
-          {
-            label: "Kelola Publikasi",
-            to: "/admin/articles",
-            icon: FileText,
-          },
-        ]}
-      />
-
       <PublicHero
         eyebrow="Publikasi Gereja"
         title="Warta, renungan, dan buletin yang mudah diikuti jemaat."
@@ -87,6 +85,11 @@ export default function PublicationsPage() {
               <span className="inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
                 {featuredPost.category}
               </span>
+              {featuredCommissionLabel ? (
+                <span className="ml-2 inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
+                  {featuredCommissionLabel}
+                </span>
+              ) : null}
               <h2 className="mt-4 text-2xl font-bold leading-tight text-slate-950 md:text-3xl dark:text-white">
                 {featuredPost.title}
               </h2>
@@ -170,9 +173,16 @@ export default function PublicationsPage() {
                   className="rounded-none border-0"
                 />
                 <div className="flex flex-1 flex-col p-6">
-                  <span className="inline-flex w-fit rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
-                    {item.category}
-                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex w-fit rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
+                      {item.category}
+                    </span>
+                    {getPublicationCommissionLabel(item, commissions) ? (
+                      <span className="inline-flex w-fit rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
+                        {getPublicationCommissionLabel(item, commissions)}
+                      </span>
+                    ) : null}
+                  </div>
                   <h3 className="mt-4 text-xl font-semibold text-slate-950 dark:text-white">
                     {item.title}
                   </h3>

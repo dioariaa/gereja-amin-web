@@ -13,6 +13,7 @@ import {
   formatCurrency,
   formatFinanceDate,
   getFinanceSummary,
+  listFinanceTransactions,
 } from "../../services/financeService";
 import { getJemaatStatsFrom } from "../../services/jemaatService";
 
@@ -35,7 +36,8 @@ export default function DashboardPage() {
     loading: jemaatLoading,
     source: jemaatSource,
   } = useJemaatData();
-  const financeSummary = getFinanceSummary(financeTransactions);
+  const normalizedFinanceTransactions = listFinanceTransactions(financeTransactions);
+  const financeSummary = getFinanceSummary(normalizedFinanceTransactions);
   const jemaatStats = getJemaatStatsFrom(families, individuals);
   const financeStats = [
     {
@@ -56,7 +58,7 @@ export default function DashboardPage() {
       icon: Wallet,
     },
   ];
-  const recentTransactions = financeTransactions.slice(0, 4);
+  const recentTransactions = normalizedFinanceTransactions.slice(0, 4);
 
   const stats = [
     ...(showContent ? [{ title: "Total Artikel", value: "24", icon: FileText }] : []),
@@ -186,7 +188,7 @@ export default function DashboardPage() {
               Catatan Demo
             </p>
             <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-              Data dashboard masih dummy dan siap disambungkan ke API atau database pada tahap berikutnya.
+              Ringkasan memakai sumber data modul aktif. Jika Supabase belum siap, sistem tetap memakai fallback lokal untuk demo.
             </p>
           </div>
         </div>

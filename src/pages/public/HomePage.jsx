@@ -3,17 +3,24 @@ import { CalendarDays, MapPin, Newspaper, UsersRound } from "lucide-react";
 import heroImage from "../../assets/hero.png";
 import {
   churchInfo,
+  formatScheduleDateShort,
+  getUpcomingScheduleEvents,
+  getPrimaryContact,
   ministryPillars,
   publicStats,
   serviceAreas,
-  worshipScheduleGroups,
-} from "../../data/publicContentData";
-import { commissionSeed } from "../../services/commissionsService";
+} from "../../services/publicContentService";
 import {
   formatPublicDate,
   listActivePublications,
-  publicationSeed,
 } from "../../services/publicationsService";
+import {
+  useCommissionsCms,
+  useContactsCms,
+  useHomeContentCms,
+  usePublicationsCms,
+  useSchedulesCms,
+} from "../../hooks/usePublicCmsData";
 import {
   InfoCard,
   MediaFrame,
@@ -22,9 +29,20 @@ import {
 } from "../../components/public/PublicContent";
 
 export default function HomePage() {
-  const primarySchedules = worshipScheduleGroups.flatMap((group) => group.items).slice(0, 3);
-  const featuredPublications = listActivePublications(publicationSeed).slice(0, 2);
-  const featuredCommissions = commissionSeed.slice(0, 4);
+  const [homeContent] = useHomeContentCms();
+  const [scheduleItems] = useSchedulesCms();
+  const [contactItems] = useContactsCms();
+  const [publications] = usePublicationsCms();
+  const [commissions] = useCommissionsCms();
+  const primarySchedules = getUpcomingScheduleEvents(scheduleItems, 3);
+  const nextSchedule = primarySchedules[0];
+  const featuredPublications = listActivePublications(publications).slice(0, 2);
+  const featuredCommissions = commissions
+    .filter((item) => item.status !== "Draft" && item.status !== "Arsip")
+    .slice(0, 4);
+  const phoneContact = getPrimaryContact(contactItems, "WhatsApp");
+  const emailContact = getPrimaryContact(contactItems, "Email");
+  const addressContact = getPrimaryContact(contactItems, "Alamat Gereja");
 
   return (
     <div className="space-y-12">
@@ -39,30 +57,30 @@ export default function HomePage() {
         <div className="grid min-h-[560px] gap-8 px-6 py-10 md:grid-cols-[1.1fr_0.9fr] md:px-10 md:py-16">
           <div className="flex flex-col justify-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100">
-              Selamat Datang
+              {homeContent.heroEyebrow}
             </p>
             <h1 className="max-w-3xl text-3xl font-bold leading-tight md:text-5xl">
-              {churchInfo.name}
+              {homeContent.heroTitle}
             </h1>
             <p className="mt-4 text-lg font-semibold text-white/90">
-              {churchInfo.tagline}
+              {homeContent.heroSubtitle}
             </p>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/80 md:text-base">
-              "{churchInfo.scripture}" ({churchInfo.scriptureRef})
+              {homeContent.heroDescription}
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
-                to="/jadwal-ibadah"
+                to={homeContent.primaryCtaTo}
                 className="inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-violet-900 transition hover:bg-violet-50"
               >
-                Lihat Jadwal Ibadah
+                {homeContent.primaryCtaLabel}
               </Link>
               <Link
-                to="/tentang-kami"
+                to={homeContent.secondaryCtaTo}
                 className="inline-flex items-center justify-center rounded-xl border border-cyan-100/40 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
               >
-                Mengenal Gereja
+                {homeContent.secondaryCtaLabel}
               </Link>
             </div>
           </div>
@@ -70,21 +88,25 @@ export default function HomePage() {
           <div className="grid content-end gap-4">
             <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur">
               <p className="text-sm text-cyan-100">Ibadah Umum Minggu</p>
-              <h2 className="mt-2 text-lg font-semibold">Minggu, 10:00 - 12:00 WIB</h2>
+              <h2 className="mt-2 text-lg font-semibold">
+                {nextSchedule
+                  ? `${formatScheduleDateShort(nextSchedule.eventDate)}, ${nextSchedule.time}`
+                  : "Jadwal segera diperbarui"}
+              </h2>
               <p className="mt-2 text-sm text-white/75">
-                Terbuka untuk jemaat dan pengunjung yang ingin beribadah bersama.
+                {nextSchedule?.title || "Terbuka untuk jemaat dan pengunjung yang ingin beribadah bersama."}
               </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur">
                 <p className="text-sm text-cyan-100">Lokasi</p>
-                <p className="mt-2 text-sm font-semibold leading-6">{churchInfo.address}</p>
+                <p className="mt-2 text-sm font-semibold leading-6">{addressContact?.value || churchInfo.address}</p>
               </div>
               <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur">
                 <p className="text-sm text-cyan-100">Kontak</p>
-                <p className="mt-2 text-lg font-bold">{churchInfo.phone}</p>
-                <p className="mt-1 break-all text-xs text-white/70">{churchInfo.email}</p>
+                <p className="mt-2 text-lg font-bold">{phoneContact?.value || churchInfo.phone}</p>
+                <p className="mt-1 break-all text-xs text-white/70">{emailContact?.value || churchInfo.email}</p>
               </div>
             </div>
           </div>
@@ -122,10 +144,10 @@ export default function HomePage() {
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
           {primarySchedules.map((item) => (
             <InfoCard
-              key={`${item.title}-${item.time}`}
+              key={item.id}
               icon={CalendarDays}
               title={item.title}
-              description={item.notes}
+              description={formatScheduleDateShort(item.eventDate)}
               meta={item.time}
             />
           ))}
@@ -137,8 +159,8 @@ export default function HomePage() {
           <div>
             <SectionHeader
               eyebrow="Arah Pelayanan"
-              title="Gereja yang bertumbuh bersama jemaat"
-              description="Pelayanan gereja dibangun untuk menolong jemaat beribadah, bertumbuh, melayani, dan saling memperhatikan."
+              title={homeContent.welcomeTitle}
+              description={homeContent.welcomeDescription}
             />
             <div className="mt-6">
               <TagList items={serviceAreas} tone="cyan" />

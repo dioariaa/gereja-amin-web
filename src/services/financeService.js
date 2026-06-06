@@ -32,7 +32,9 @@ export {
 };
 
 export function listFinanceTransactions(source = financeTransactionsSeed) {
-  return source.map(normalizeFinanceTransaction);
+  return source
+    .map(normalizeFinanceTransaction)
+    .sort((a, b) => `${b.date}-${b.id}`.localeCompare(`${a.date}-${a.id}`));
 }
 
 export function getRecentFinanceTransactions(transactions, type, limit = 6) {
@@ -58,8 +60,8 @@ export function createFinanceTransaction(type, form, sequence = 1) {
   const fallbackActor = isIncome ? "Jemaat" : "Penerima";
   const proofPrefix = isIncome ? "KM" : "KK";
 
-  return {
-    id: createFinanceTransactionId(type),
+  return normalizeFinanceTransaction({
+    id: form.id || createFinanceTransactionId(type),
     type,
     date: form.date,
     account: form.account,
@@ -69,6 +71,23 @@ export function createFinanceTransaction(type, form, sequence = 1) {
     status: form.status,
     proof: form.proof || `${proofPrefix}-${String(sequence).padStart(3, "0")}`,
     description: form.description || form.category,
+    attachmentUrl: form.attachmentUrl || "",
+  });
+}
+
+export function transactionToForm(transaction) {
+  const normalized = normalizeFinanceTransaction(transaction);
+
+  return {
+    date: normalized.date,
+    account: normalized.account,
+    category: normalized.category,
+    actor: normalized.actor,
+    amount: normalized.amount,
+    status: normalized.status || "Selesai",
+    proof: normalized.proof === "-" ? "" : normalized.proof,
+    description: normalized.description || "",
+    attachmentUrl: normalized.attachmentUrl || "",
   };
 }
 
@@ -251,4 +270,70 @@ export async function createExpenseTransactionInSupabase(form) {
 
   if (error) throw error;
   return mapExpenseFromSupabase(data);
+}
+
+export async function updateIncomeTransactionInSupabase(id, form) {
+  assertSupabaseReady();
+  const [categoryId, accountId] = await Promise.all([
+    resolveLookupId("income_categories", form.category),
+    resolveCashAccountId(form.account),
+  ]);
+  const { data, error } = await supabase
+    .from("income_transactions")
+    .update(incomePayloadFromForm(form, categoryId, accountId))
+    .eq("id", id)
+    .select(INCOME_SELECT)
+    .single();
+
+  if (error) throw error;
+  return mapIncomeFromSupabase(data);
+}
+
+export async function updateExpenseTransactionInSupabase(id, form) {
+  assertSupabaseReady();
+  const [categoryId, accountId] = await Promise.all([
+    resolveLookupId("expense_categories", form.category),
+    resolveCashAccountId(form.account),
+  ]);
+  const { data, error } = await supabase
+    .from("expense_transactions")
+    .update(expensePayloadFromForm(form, categoryId, accountId))
+    .eq("id", id)
+    .select(EXPENSE_SELECT)
+    .single();
+
+  if (error) throw error;
+  return mapExpenseFromSupabase(data);
+}
+
+export async function deleteIncomeTransactionFromSupabase(id) {
+  assertSupabaseReady();
+  const { error } = await supabase.from("income_transactions").delete().eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function deleteExpenseTransactionFromSupabase(id) {
+  assertSupabaseReady();
+  const { error } = await supabase.from("expense_transactions").delete().eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function createFinanceTransactionInSupabase(type, form) {
+  return type === "Masuk"
+    ? createIncomeTransactionInSupabase(form)
+    : createExpenseTransactionInSupabase(form);
+}
+
+export async function updateFinanceTransactionInSupabase(id, type, form) {
+  return type === "Masuk"
+    ? updateIncomeTransactionInSupabase(id, form)
+    : updateExpenseTransactionInSupabase(id, form);
+}
+
+export async function deleteFinanceTransactionFromSupabase(id, type) {
+  return type === "Masuk"
+    ? deleteIncomeTransactionFromSupabase(id)
+    : deleteExpenseTransactionFromSupabase(id);
 }

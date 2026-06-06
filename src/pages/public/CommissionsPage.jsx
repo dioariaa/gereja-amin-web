@@ -1,8 +1,5 @@
 import { Link } from "react-router-dom";
-import { CalendarDays, PenLine, Plus, Settings, UsersRound } from "lucide-react";
-import PublicAdminActionBar, {
-  ContentManageButton,
-} from "../../components/public/PublicAdminActionBar";
+import { CalendarDays, PenLine, UsersRound } from "lucide-react";
 import {
   MediaFrame,
   PublicHero,
@@ -10,38 +7,19 @@ import {
   TagList,
 } from "../../components/public/PublicContent";
 import {
-  COMMISSIONS_STORAGE_KEY,
-  commissionSeed,
   getCommissionMetrics,
   listCommissions,
 } from "../../services/commissionsService";
-import useLocalStorageState from "../../hooks/useLocalStorageState";
+import { useCommissionsCms } from "../../hooks/usePublicCmsData";
 
 export default function CommissionsPage() {
-  const [savedCommissions] = useLocalStorageState(COMMISSIONS_STORAGE_KEY, commissionSeed);
-  const commissions = listCommissions(savedCommissions);
+  const [savedCommissions] = useCommissionsCms();
+  const commissions = listCommissions(savedCommissions)
+    .filter((item) => item.status !== "Draft" && item.status !== "Arsip");
   const metrics = getCommissionMetrics(commissions);
 
   return (
     <div className="space-y-8">
-      <PublicAdminActionBar
-        title="Kelola konten komisi pelayanan"
-        description="Aksi ini mengarah ke panel admin untuk mengatur profil, pengurus, jadwal, dan konten komisi."
-        actions={[
-          {
-            label: "Tambah Komisi",
-            to: "/admin/content/commissions?action=create",
-            icon: Plus,
-            variant: "primary",
-          },
-          {
-            label: "Kelola Komisi",
-            to: "/admin/content/commissions",
-            icon: Settings,
-          },
-        ]}
-      />
-
       <PublicHero
         eyebrow="Komisi Pelayanan"
         title="Ruang pelayanan Gereja AMIN Jemaat Tangerang Raya"
@@ -100,20 +78,13 @@ export default function CommissionsPage() {
                 <TagList items={commission.focus} tone="cyan" />
               </div>
 
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+              <div className="mt-6">
                 <Link
                   to={`/komisi/${commission.slug}`}
-                  className="brand-button-primary inline-flex flex-1 items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition"
+                  className="brand-button-primary inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition"
                 >
                   Lihat Detail
                 </Link>
-                <ContentManageButton
-                  to={`/admin/content/commissions/${commission.slug}?action=edit`}
-                  icon={Settings}
-                  className="flex-1"
-                >
-                  Kelola
-                </ContentManageButton>
               </div>
               </div>
             </article>

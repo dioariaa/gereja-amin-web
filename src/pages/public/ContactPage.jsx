@@ -1,5 +1,5 @@
-import { Info, Mail, MapPin, MessageCircle, Phone, Settings } from "lucide-react";
-import PublicAdminActionBar from "../../components/public/PublicAdminActionBar";
+import { Info, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { PublicAdminShortcut } from "../../components/public/PublicAdminActionBar";
 import {
   InfoCard,
   PublicHero,
@@ -7,9 +7,10 @@ import {
 } from "../../components/public/PublicContent";
 import {
   churchInfo,
-  contactChannels,
-  worshipScheduleGroups,
-} from "../../data/publicContentData";
+  formatScheduleDateShort,
+  getUpcomingScheduleEvents,
+} from "../../services/publicContentService";
+import { useContactsCms, useSchedulesCms } from "../../hooks/usePublicCmsData";
 
 const channelIcons = {
   "Alamat Gereja": MapPin,
@@ -18,27 +19,22 @@ const channelIcons = {
 };
 
 export default function ContactPage() {
-  const quickSchedules = worshipScheduleGroups.flatMap((group) => group.items).slice(0, 4);
+  const [contactItems] = useContactsCms();
+  const [scheduleItems] = useSchedulesCms();
+  const quickSchedules = getUpcomingScheduleEvents(scheduleItems, 4);
+  const activeContacts = contactItems.filter((item) => item.status !== "Draft" && item.status !== "Arsip");
+  const phoneContact = activeContacts.find((item) => item.type === "WhatsApp");
+  const emailContact = activeContacts.find((item) => item.type === "Email");
 
   return (
     <div className="space-y-10">
-      <PublicAdminActionBar
-        title="Kelola informasi kontak"
-        description="Aksi untuk memperbarui alamat, telepon, email, maps, dan sosial media gereja."
-        actions={[
-          {
-            label: "Kelola Kontak",
-            to: "/admin/content/contact",
-            icon: Info,
-            variant: "primary",
-          },
-          {
-            label: "Ubah Info Gereja",
-            to: "/admin/content/contact?action=ubah-info-gereja",
-            icon: Settings,
-          },
-        ]}
-      />
+      <div className="flex justify-end">
+        <PublicAdminShortcut
+          to="/admin/content/contact"
+          label="Edit Informasi Kontak"
+          icon={Info}
+        />
+      </div>
 
       <PublicHero
         eyebrow="Kontak"
@@ -50,17 +46,17 @@ export default function ContactPage() {
               Kontak utama
             </p>
             <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-              {churchInfo.phone}
+              {phoneContact?.value || churchInfo.phone}
             </p>
             <p className="mt-2 break-all text-sm text-slate-600 dark:text-slate-300">
-              {churchInfo.email}
+              {emailContact?.value || churchInfo.email}
             </p>
           </div>
         }
       />
 
       <section className="grid gap-5 md:grid-cols-3">
-        {contactChannels.map((item) => {
+        {activeContacts.map((item) => {
           const Icon = channelIcons[item.type] || Info;
 
           return (
@@ -101,7 +97,7 @@ export default function ContactPage() {
                   {item.title}
                 </h3>
                 <p className="mt-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200">
-                  {item.time}
+                  {formatScheduleDateShort(item.eventDate)} - {item.time}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
                   {item.location}
@@ -126,14 +122,14 @@ export default function ContactPage() {
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <a
-              href={`https://wa.me/${churchInfo.whatsapp}`}
+              href={phoneContact?.href || `https://wa.me/${churchInfo.whatsapp}`}
               className="brand-button-primary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition"
             >
               <MessageCircle size={17} />
               Chat WhatsApp
             </a>
             <a
-              href={`mailto:${churchInfo.email}`}
+              href={emailContact?.href || `mailto:${churchInfo.email}`}
               className="brand-button-secondary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition"
             >
               <Mail size={17} />

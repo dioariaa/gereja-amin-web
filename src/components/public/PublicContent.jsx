@@ -1,4 +1,5 @@
 import { Image as ImageIcon } from "lucide-react";
+import { resolvePublicMediaUrl } from "../../services/mediaService";
 
 export function SectionHeader({
   eyebrow,
@@ -83,6 +84,8 @@ export function MediaFrame({
   className = "",
   compact = false,
 }) {
+  const resolvedSrc = resolvePublicMediaUrl(src);
+
   return (
     <div
       className={[
@@ -91,8 +94,8 @@ export function MediaFrame({
         className,
       ].join(" ")}
     >
-      {src ? (
-        <img src={src} alt={alt || label || ""} className="h-full w-full object-cover" />
+      {resolvedSrc ? (
+        <img src={resolvedSrc} alt={alt || label || ""} className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full flex-col justify-between p-5">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-violet-700 shadow-sm dark:bg-[#15111c] dark:text-violet-200">

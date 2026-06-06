@@ -12,17 +12,30 @@ import {
   formatCurrency,
   formatNumber,
   formatShortFinanceDate,
+  getFinanceSummary,
   incomeCategories,
   listFinanceTransactions,
-  openingBalance,
 } from "../../services/financeService";
 import useFinanceTransactions from "../../hooks/useFinanceTransactions";
 
 const monthOptions = [
+  { label: "Januari", value: "01" },
+  { label: "Februari", value: "02" },
+  { label: "Maret", value: "03" },
   { label: "April", value: "04" },
   { label: "Mei", value: "05" },
   { label: "Juni", value: "06" },
+  { label: "Juli", value: "07" },
+  { label: "Agustus", value: "08" },
+  { label: "September", value: "09" },
+  { label: "Oktober", value: "10" },
+  { label: "November", value: "11" },
+  { label: "Desember", value: "12" },
 ];
+
+const currentDate = new Date();
+const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0");
+const currentYear = String(currentDate.getFullYear());
 
 export default function ReportPage() {
   const {
@@ -31,16 +44,24 @@ export default function ReportPage() {
     source: dataSource,
     transactions: savedTransactions,
   } = useFinanceTransactions();
-  const [month, setMonth] = useState("04");
-  const [year, setYear] = useState("2026");
+  const [month, setMonth] = useState(currentMonth);
+  const [year, setYear] = useState(currentYear);
 
   const selectedMonth = monthOptions.find((item) => item.value === month) || monthOptions[0];
-  const transactions = useMemo(
+  const periodStart = `${year}-${month}-01`;
+  const activeTransactions = useMemo(
     () =>
       listFinanceTransactions(savedTransactions)
-        .filter((item) => item.status !== "Draft")
-        .filter((item) => item.date?.startsWith(`${year}-${month}`)),
-    [month, savedTransactions, year]
+        .filter((item) => item.status !== "Draft"),
+    [savedTransactions]
+  );
+  const openingTransactions = useMemo(
+    () => activeTransactions.filter((item) => item.date && item.date < periodStart),
+    [activeTransactions, periodStart]
+  );
+  const transactions = useMemo(
+    () => activeTransactions.filter((item) => item.date?.startsWith(`${year}-${month}`)),
+    [activeTransactions, month, year]
   );
   const receiptRows = useMemo(
     () => buildReportRows(transactions, "Masuk", incomeCategories),
@@ -52,14 +73,22 @@ export default function ReportPage() {
   );
 
   const totals = useMemo(() => {
+    const periodOpeningBalance = getFinanceSummary(openingTransactions).balance;
     const receiptTotals = getCategoryTotals(incomeCategories, receiptRows);
     const expenseTotals = getCategoryTotals(expenseCategories, expenseRows);
     const receiptTotal = sumValues(receiptTotals);
     const expenseTotal = sumValues(expenseTotals);
-    const balance = openingBalance + receiptTotal - expenseTotal;
+    const balance = periodOpeningBalance + receiptTotal - expenseTotal;
 
-    return { receiptTotals, expenseTotals, receiptTotal, expenseTotal, balance };
-  }, [expenseRows, receiptRows]);
+    return {
+      balance,
+      expenseTotal,
+      expenseTotals,
+      openingBalance: periodOpeningBalance,
+      receiptTotal,
+      receiptTotals,
+    };
+  }, [expenseRows, openingTransactions, receiptRows]);
 
   const exportCsv = () => {
     const rows = [
@@ -88,7 +117,7 @@ export default function ReportPage() {
         getRowTotal(row),
       ]),
       ["Jumlah Pengeluaran Bulan Ini", "", "", ...expenseCategories.map((category) => totals.expenseTotals[category]), totals.expenseTotal],
-      ["Saldo Bulan Lalu", openingBalance],
+      ["Saldo Bulan Lalu", totals.openingBalance],
       ["Saldo Bulan Ini", totals.balance],
     ];
 
@@ -109,7 +138,7 @@ export default function ReportPage() {
       <AdminPageHeader
         eyebrow="Laporan Kas"
         title="Buku Kas dan Bank Tabelaris"
-        description="Format laporan mengikuti referensi Excel dan sekarang dihitung dari transaksi kas dummy yang sama dengan Cashflow."
+        description="Format laporan mengikuti referensi Excel dan dihitung dari transaksi kas yang sama dengan Cashflow."
         meta={<StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />}
         actions={
           <>
@@ -149,7 +178,7 @@ export default function ReportPage() {
       </FilterPanel>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard title="Saldo Bulan Lalu" value={formatCurrency(openingBalance)} description="Saldo awal periode." icon={Wallet} />
+        <SummaryCard title="Saldo Bulan Lalu" value={formatCurrency(totals.openingBalance)} description="Dihitung dari transaksi sebelum periode." icon={Wallet} />
         <SummaryCard title="Penerimaan Bulan Ini" value={formatCurrency(totals.receiptTotal)} description={`${receiptRows.length} transaksi masuk.`} icon={Wallet} tone="success" />
         <SummaryCard title="Pengeluaran Bulan Ini" value={formatCurrency(totals.expenseTotal)} description={`${expenseRows.length} transaksi keluar.`} icon={Wallet} tone="danger" />
         <SummaryCard title="Saldo Bulan Ini" value={formatCurrency(totals.balance)} description="Saldo akhir tabelaris." icon={Wallet} />
@@ -250,7 +279,7 @@ export default function ReportPage() {
             </p>
             <table className="mt-4 min-w-full border-collapse text-sm">
               <tbody>
-                <SummaryRow label="Jumlah Penerimaan bulan ini dan saldo bulan lalu" value={openingBalance + totals.receiptTotal} />
+                <SummaryRow label="Jumlah Penerimaan bulan ini dan saldo bulan lalu" value={totals.openingBalance + totals.receiptTotal} />
                 <SummaryRow label="Jumlah Pengeluaran bulan ini" value={totals.expenseTotal} />
                 <SummaryRow label="Total Saldo Rekening Kas Jemaat" value={totals.balance} strong />
               </tbody>

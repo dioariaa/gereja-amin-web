@@ -9,6 +9,7 @@
 ```bash
 VITE_SUPABASE_URL=https://project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SUPABASE_PUBLIC_MEDIA_BUCKET=public-assets
 VITE_ENABLE_DEMO_AUTH=false
 ```
 
@@ -30,5 +31,6 @@ Catatan fase ini:
 - Service frontend sudah mencoba membaca Supabase jika env tersedia.
 - Jika Supabase gagal/permission belum siap, UI fallback ke data localStorage/dummy.
 - `seed_jemaat_excel.sql` berisi 55 keluarga, 174 individu, 4 sektor, dan aman dijalankan ulang karena memakai upsert.
-- `public_content_schema.sql` menyiapkan tabel publikasi, komisi public, jadwal, galeri, kontak, dan policy CRUD untuk `super_admin` + `sekretaris`.
+- `public_content_schema.sql` menyiapkan tabel halaman public, publikasi, komisi public, jadwal, galeri, kontak, bucket Storage `public-assets`, dan policy CRUD untuk `super_admin` + `sekretaris`.
+- Field gambar bisa memakai URL penuh atau path object di bucket `public-assets`, contoh `publications/warta-minggu.jpg`.
 - Sebelum production, aktifkan Supabase Auth penuh dan ketatkan RLS sesuai role di tabel `profiles`.

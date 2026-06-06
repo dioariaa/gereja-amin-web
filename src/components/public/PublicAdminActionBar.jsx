@@ -32,6 +32,29 @@ export function ContentManageButton({
   );
 }
 
+export function PublicAdminShortcut({
+  to,
+  label = "Kelola Konten",
+  icon: Icon = Settings,
+  className = "",
+}) {
+  const { user } = useAuth();
+
+  if (!canManagePublicContent(user?.role)) {
+    return null;
+  }
+
+  return (
+    <Link
+      to={to}
+      className={`inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white/85 px-3 py-1.5 text-xs font-semibold text-violet-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-200 dark:border-violet-900 dark:bg-[#15111c]/85 dark:text-violet-100 dark:hover:bg-violet-950/40 dark:focus-visible:ring-violet-900 ${className}`}
+    >
+      <Icon size={14} />
+      {label}
+    </Link>
+  );
+}
+
 export default function PublicAdminActionBar({
   title = "Aksi Admin",
   description = "Kelola konten halaman ini dari panel admin.",

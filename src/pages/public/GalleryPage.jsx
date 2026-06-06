@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { Camera, Images, Plus, UploadCloud } from "lucide-react";
-import PublicAdminActionBar from "../../components/public/PublicAdminActionBar";
+import { Camera, Images, UploadCloud } from "lucide-react";
+import { PublicAdminShortcut } from "../../components/public/PublicAdminActionBar";
 import {
   EmptyPublicState,
   InfoCard,
@@ -8,47 +8,42 @@ import {
   PublicHero,
   SectionHeader,
 } from "../../components/public/PublicContent";
-import { galleryAlbums } from "../../data/publicContentData";
+import {
+  listActiveItems,
+} from "../../services/publicContentService";
+import { useGalleryCms } from "../../hooks/usePublicCmsData";
 
 export default function GalleryPage() {
   const [activeCategory, setActiveCategory] = useState("Semua");
+  const [galleryItems] = useGalleryCms();
+  const activeGalleryItems = useMemo(() => listActiveItems(galleryItems), [galleryItems]);
   const categories = useMemo(
-    () => ["Semua", ...new Set(galleryAlbums.map((item) => item.category))],
-    []
+    () => ["Semua", ...new Set(activeGalleryItems.map((item) => item.category))],
+    [activeGalleryItems]
   );
   const visibleAlbums = useMemo(
     () =>
       activeCategory === "Semua"
-        ? galleryAlbums
-        : galleryAlbums.filter((item) => item.category === activeCategory),
-    [activeCategory]
+        ? activeGalleryItems
+        : activeGalleryItems.filter((item) => item.category === activeCategory),
+    [activeCategory, activeGalleryItems]
   );
 
   return (
     <div className="space-y-10">
-      <PublicAdminActionBar
-        title="Kelola galeri"
-        description="Tambah album, foto, dan dokumentasi kegiatan gereja dari panel admin."
-        actions={[
-          {
-            label: "Tambah Galeri",
-            to: "/admin/content/gallery?action=tambah-galeri",
-            icon: Plus,
-            variant: "primary",
-          },
-          {
-            label: "Kelola Galeri",
-            to: "/admin/content/gallery",
-            icon: Images,
-          },
-        ]}
-      />
+      <div className="flex justify-end">
+        <PublicAdminShortcut
+          to="/admin/content/gallery"
+          label="Kelola Galeri"
+          icon={Images}
+        />
+      </div>
 
       <PublicHero
         eyebrow="Galeri"
         title="Dokumentasi ibadah dan pelayanan jemaat"
         description="Galeri disiapkan sebagai ruang dokumentasi kegiatan gereja. Saat data gambar real sudah tersedia, admin dapat mengisi URL media atau menghubungkannya ke Supabase Storage."
-        aside={<MediaFrame label="Album dokumentasi" meta={`${galleryAlbums.length} album siap isi`} />}
+        aside={<MediaFrame label="Album dokumentasi" meta={`${activeGalleryItems.length} album siap isi`} />}
       />
 
       <section className="grid gap-5 md:grid-cols-3">

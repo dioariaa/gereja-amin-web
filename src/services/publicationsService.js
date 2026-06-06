@@ -5,6 +5,7 @@ import {
   publicationSeed,
   toSlug,
 } from "../data/publicationsData";
+import { commissions as commissionSeed } from "../data/commissionsData";
 
 export {
   PUBLICATIONS_STORAGE_KEY,
@@ -14,11 +15,11 @@ export {
 };
 
 export function listPublications(source = publicationSeed) {
-  return source;
+  return [...source].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 }
 
 export function listActivePublications(source = publicationSeed) {
-  return source.filter((item) => item.status === "Aktif");
+  return listPublications(source).filter((item) => item.status === "Aktif");
 }
 
 export function findPublicationBySlug(source, slug) {
@@ -36,3 +37,19 @@ export function filterPublicationsByCategory(source, category) {
     : activePublications.filter((item) => item.category === category);
 }
 
+export function listPublicationsByCommission(source, commissionSlug, { includeDrafts = false } = {}) {
+  const publications = includeDrafts ? listPublications(source) : listActivePublications(source);
+
+  return publications.filter((item) => item.commissionSlug === commissionSlug);
+}
+
+export function getPublicationCommission(publication, commissions = commissionSeed) {
+  if (!publication?.commissionSlug) return null;
+
+  return commissions.find((commission) => commission.slug === publication.commissionSlug) || null;
+}
+
+export function getPublicationCommissionLabel(publication, commissions = commissionSeed) {
+  const commission = getPublicationCommission(publication, commissions);
+  return commission?.shortName || commission?.name || "";
+}

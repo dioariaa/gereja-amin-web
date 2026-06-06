@@ -1,0 +1,204 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  COMMISSIONS_STORAGE_KEY,
+  commissionSeed,
+} from "../services/commissionsService";
+import {
+  PUBLICATIONS_STORAGE_KEY,
+  publicationSeed,
+} from "../services/publicationsService";
+import {
+  PUBLIC_CONTENT_STORAGE_KEYS,
+  aboutContentSeed,
+  contactItemsSeed,
+  galleryItemsSeed,
+  homeContentSeed,
+  scheduleItemsSeed,
+} from "../services/publicContentService";
+import {
+  fetchCommissionsFromSupabase,
+  fetchContactsFromSupabase,
+  fetchGalleryFromSupabase,
+  fetchPublicationsFromSupabase,
+  fetchSchedulesFromSupabase,
+  fetchSitePage,
+  saveCommissionsToSupabase,
+  saveContactsToSupabase,
+  saveGalleryToSupabase,
+  savePublicationsToSupabase,
+  saveSchedulesToSupabase,
+  saveSitePage,
+} from "../services/publicContentSupabaseService";
+import { isSupabaseConfigured } from "../lib/supabase";
+import useLocalStorageState from "./useLocalStorageState";
+
+function hasRemoteValue(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  return Boolean(value && typeof value === "object" && Object.keys(value).length > 0);
+}
+
+function useSyncedCmsState(storageKey, initialValue, { loadRemote, saveRemote }) {
+  const [value, setLocalValue] = useLocalStorageState(storageKey, initialValue);
+  const [meta, setMeta] = useState(() => ({
+    source: isSupabaseConfigured ? "Local fallback" : "Local only",
+    error: "",
+    isRemoteReady: false,
+  }));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!isSupabaseConfigured || !loadRemote) {
+      return undefined;
+    }
+
+    Promise.resolve()
+      .then(loadRemote)
+      .then((remoteValue) => {
+        if (cancelled) return;
+
+        if (hasRemoteValue(remoteValue)) {
+          setLocalValue(remoteValue);
+          setMeta({ source: "Supabase", error: "", isRemoteReady: true });
+          return;
+        }
+
+        setMeta({ source: "Local fallback", error: "Supabase belum punya data.", isRemoteReady: false });
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setMeta({
+          source: "Local fallback",
+          error: error.message || "Gagal membaca Supabase.",
+          isRemoteReady: false,
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadRemote, setLocalValue]);
+
+  const setValue = useCallback(
+    (nextValue) => {
+      setLocalValue((previousValue) => {
+        const resolvedValue = typeof nextValue === "function"
+          ? nextValue(previousValue)
+          : nextValue;
+
+        if (isSupabaseConfigured && saveRemote) {
+          Promise.resolve()
+            .then(() => saveRemote(resolvedValue))
+            .then(() => {
+              setMeta({ source: "Supabase", error: "", isRemoteReady: true });
+            })
+            .catch((error) => {
+              setMeta({
+                source: "Local fallback",
+                error: error.message || "Gagal menyimpan ke Supabase.",
+                isRemoteReady: false,
+              });
+            });
+        }
+
+        return resolvedValue;
+      });
+    },
+    [saveRemote, setLocalValue]
+  );
+
+  return [value, setValue, meta];
+}
+
+const loadHomeContent = () => fetchSitePage("home");
+const saveHomeContent = (value) => saveSitePage("home", "Beranda", value);
+const loadAboutContent = () => fetchSitePage("about");
+const saveAboutContent = (value) => saveSitePage("about", "Tentang Kami", value);
+const loadPublicPublications = () => fetchPublicationsFromSupabase({ includeDrafts: true });
+const loadAdminPublications = () => fetchPublicationsFromSupabase({ includeDrafts: true });
+const savePublications = (value) => savePublicationsToSupabase(value);
+const loadPublicCommissions = () => fetchCommissionsFromSupabase({ includeDrafts: true });
+const loadAdminCommissions = () => fetchCommissionsFromSupabase({ includeDrafts: true });
+const saveCommissions = (value) => saveCommissionsToSupabase(value);
+const loadPublicSchedules = () => fetchSchedulesFromSupabase({ includeDrafts: true });
+const loadAdminSchedules = () => fetchSchedulesFromSupabase({ includeDrafts: true });
+const saveSchedules = (value) => saveSchedulesToSupabase(value);
+const loadPublicGallery = () => fetchGalleryFromSupabase({ includeDrafts: true });
+const loadAdminGallery = () => fetchGalleryFromSupabase({ includeDrafts: true });
+const saveGallery = (value) => saveGalleryToSupabase(value);
+const loadContacts = () => fetchContactsFromSupabase();
+const saveContacts = (value) => saveContactsToSupabase(value);
+
+export function useHomeContentCms() {
+  return useSyncedCmsState(PUBLIC_CONTENT_STORAGE_KEYS.home, homeContentSeed, {
+    loadRemote: loadHomeContent,
+    saveRemote: saveHomeContent,
+  });
+}
+
+export function useAboutContentCms() {
+  return useSyncedCmsState(PUBLIC_CONTENT_STORAGE_KEYS.about, aboutContentSeed, {
+    loadRemote: loadAboutContent,
+    saveRemote: saveAboutContent,
+  });
+}
+
+export function usePublicationsCms({ admin = false } = {}) {
+  const options = useMemo(
+    () => ({
+      loadRemote: admin ? loadAdminPublications : loadPublicPublications,
+      saveRemote: admin ? savePublications : undefined,
+    }),
+    [admin]
+  );
+
+  return useSyncedCmsState(PUBLICATIONS_STORAGE_KEY, publicationSeed, options);
+}
+
+export function useCommissionsCms({ admin = false } = {}) {
+  const options = useMemo(
+    () => ({
+      loadRemote: admin ? loadAdminCommissions : loadPublicCommissions,
+      saveRemote: admin ? saveCommissions : undefined,
+    }),
+    [admin]
+  );
+
+  return useSyncedCmsState(COMMISSIONS_STORAGE_KEY, commissionSeed, options);
+}
+
+export function useSchedulesCms({ admin = false } = {}) {
+  const options = useMemo(
+    () => ({
+      loadRemote: admin ? loadAdminSchedules : loadPublicSchedules,
+      saveRemote: admin ? saveSchedules : undefined,
+    }),
+    [admin]
+  );
+
+  return useSyncedCmsState(PUBLIC_CONTENT_STORAGE_KEYS.schedules, scheduleItemsSeed, options);
+}
+
+export function useGalleryCms({ admin = false } = {}) {
+  const options = useMemo(
+    () => ({
+      loadRemote: admin ? loadAdminGallery : loadPublicGallery,
+      saveRemote: admin ? saveGallery : undefined,
+    }),
+    [admin]
+  );
+
+  return useSyncedCmsState(PUBLIC_CONTENT_STORAGE_KEYS.gallery, galleryItemsSeed, options);
+}
+
+export function useContactsCms({ admin = false } = {}) {
+  const options = useMemo(
+    () => ({
+      loadRemote: loadContacts,
+      saveRemote: admin ? saveContacts : undefined,
+    }),
+    [admin]
+  );
+
+  return useSyncedCmsState(PUBLIC_CONTENT_STORAGE_KEYS.contacts, contactItemsSeed, options);
+}

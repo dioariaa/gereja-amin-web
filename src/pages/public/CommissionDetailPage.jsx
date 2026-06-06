@@ -1,27 +1,37 @@
 import { Link, Navigate, useParams } from "react-router-dom";
-import { ArrowLeft, CalendarDays, PenLine, Settings, UserRound } from "lucide-react";
-import PublicAdminActionBar, {
-  ContentManageButton,
-} from "../../components/public/PublicAdminActionBar";
+import { ArrowLeft, CalendarDays, Newspaper, PenLine, Plus, UserRound } from "lucide-react";
+import { PublicAdminShortcut } from "../../components/public/PublicAdminActionBar";
 import {
+  EmptyPublicState,
   MediaFrame,
   PublicHero,
   SectionHeader,
   TagList,
 } from "../../components/public/PublicContent";
 import {
-  COMMISSIONS_STORAGE_KEY,
-  commissionSeed,
   findCommissionBySlug,
   listCommissions,
 } from "../../services/commissionsService";
-import useLocalStorageState from "../../hooks/useLocalStorageState";
+import {
+  formatPublicDate,
+  listPublicationsByCommission,
+} from "../../services/publicationsService";
+import {
+  useCommissionsCms,
+  usePublicationsCms,
+} from "../../hooks/usePublicCmsData";
 
 export default function CommissionDetailPage() {
   const { slug } = useParams();
-  const [savedCommissions] = useLocalStorageState(COMMISSIONS_STORAGE_KEY, commissionSeed);
-  const commissions = listCommissions(savedCommissions);
+  const [savedCommissions] = useCommissionsCms();
+  const [publications] = usePublicationsCms();
+  const commissions = listCommissions(savedCommissions)
+    .filter((item) => item.status !== "Draft" && item.status !== "Arsip");
   const commission = findCommissionBySlug(commissions, slug);
+  const commissionPublications = listPublicationsByCommission(
+    publications,
+    commission?.slug
+  );
   const relatedCommissions = commissions
     .filter((item) => item.slug !== commission?.slug)
     .slice(0, 3);
@@ -32,23 +42,13 @@ export default function CommissionDetailPage() {
 
   return (
     <div className="space-y-8">
-      <PublicAdminActionBar
-        title={`Kelola ${commission.shortName}`}
-        description="Aksi ini hanya tampil untuk admin yang berwenang mengelola konten komisi."
-        actions={[
-          {
-            label: "Edit Komisi",
-            to: `/admin/content/commissions/${commission.slug}?action=edit`,
-            icon: PenLine,
-            variant: "primary",
-          },
-          {
-            label: "Kelola Kegiatan",
-            to: `/admin/content/commissions/${commission.slug}?action=activities`,
-            icon: CalendarDays,
-          },
-        ]}
-      />
+      <div className="flex justify-end">
+        <PublicAdminShortcut
+          to={`/admin/content/commissions/${commission.slug}?action=edit`}
+          label="Edit Komisi"
+          icon={PenLine}
+        />
+      </div>
 
       <PublicHero
         eyebrow="Komisi Pelayanan"
@@ -81,14 +81,6 @@ export default function CommissionDetailPage() {
           eyebrow="Fokus Pelayanan"
           title={`Ruang pelayanan ${commission.shortName}`}
           description="Area pelayanan utama yang menjadi perhatian komisi dalam pembinaan dan kegiatan jemaat."
-          actions={
-          <ContentManageButton
-            to={`/admin/content/commissions/${commission.slug}?action=content`}
-            icon={Settings}
-          >
-            Tambah Konten Komisi
-          </ContentManageButton>
-          }
         />
 
         <div className="mt-6">
@@ -112,6 +104,68 @@ export default function CommissionDetailPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="brand-card p-6 md:p-8">
+        <SectionHeader
+          eyebrow="Publikasi Komisi"
+          title={`Berita dan kegiatan ${commission.shortName}`}
+          description="Publikasi yang terhubung langsung dengan pelayanan komisi ini."
+          actions={
+            <PublicAdminShortcut
+              to={`/admin/articles?action=create&commission=${commission.slug}`}
+              label="Tambah Publikasi"
+              icon={Plus}
+            />
+          }
+        />
+
+        {commissionPublications.length > 0 ? (
+          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {commissionPublications.map((item) => (
+              <Link
+                key={item.id}
+                to={`/publikasi/${item.slug}`}
+                className="group brand-card flex flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-md"
+              >
+                <MediaFrame
+                  src={item.coverImage}
+                  label={item.coverLabel || commission.shortName}
+                  meta={item.category}
+                  compact
+                  className="rounded-none border-0"
+                />
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex w-fit rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
+                      {item.category}
+                    </span>
+                    <span className="inline-flex w-fit rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
+                      {commission.shortName}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 text-lg font-bold leading-tight text-slate-950 transition group-hover:text-violet-700 dark:text-white dark:group-hover:text-violet-200">
+                    {item.title}
+                  </h3>
+                  <p className="mt-3 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                    {item.excerpt}
+                  </p>
+                  <div className="mt-5 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                    <Newspaper size={15} />
+                    <span>{formatPublicDate(item.date)}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6">
+            <EmptyPublicState
+              title="Belum ada publikasi komisi"
+              description="Publikasi kegiatan komisi akan tampil di sini setelah admin menautkan artikel ke komisi ini."
+            />
+          </div>
+        )}
       </section>
 
       <section className="brand-card p-6 md:p-8">

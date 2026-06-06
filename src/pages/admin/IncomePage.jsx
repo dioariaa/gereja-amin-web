@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, ArrowDownCircle, Save } from "lucide-react";
+import { ArrowLeft, ArrowDownCircle, Edit2, Save, Trash2, X } from "lucide-react";
 import ActionButton from "../../components/admin/ActionButton";
 import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import DataTable from "../../components/admin/DataTable";
@@ -8,16 +8,13 @@ import FormField from "../../components/admin/FormField";
 import StatusBadge from "../../components/admin/StatusBadge";
 import {
   cashAccounts,
-  createFinanceTransaction,
-  createIncomeTransactionInSupabase,
   formatCurrency,
   formatFinanceDate,
-  getRecentFinanceTransactions,
   incomeCategories,
   listFinanceTransactions,
+  transactionToForm,
   transactionStatuses,
 } from "../../services/financeService";
-import { isSupabaseConfigured } from "../../lib/supabase";
 import useFinanceTransactions from "../../hooks/useFinanceTransactions";
 
 const today = new Date().toISOString().slice(0, 10);
@@ -35,19 +32,23 @@ const emptyForm = {
 
 export default function IncomePage() {
   const {
+    createTransaction,
+    deleteTransaction,
     error: dataError,
     loading: dataLoading,
-    setTransactions,
     source: dataSource,
     transactions,
+    updateTransaction,
   } = useFinanceTransactions();
   const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
 
-  const recentIncome = useMemo(
+  const incomeTransactions = useMemo(
     () =>
       transactions
-        ? getRecentFinanceTransactions(listFinanceTransactions(transactions), "Masuk")
+        ? listFinanceTransactions(transactions).filter((item) => item.type === "Masuk")
         : [],
     [transactions]
   );
@@ -67,28 +68,71 @@ export default function IncomePage() {
       return;
     }
 
-    const sequence = transactions.length + 1;
+    setSubmitting(true);
+
+    const sequence = incomeTransactions.length + 1;
     const formForSave = {
       ...form,
-      proof: form.proof || `KM-${String(sequence).padStart(3, "0")}`,
+      proof: form.proof || (editingId ? "" : `KM-${String(sequence).padStart(3, "0")}`),
     };
-    let nextTransaction = createFinanceTransaction("Masuk", formForSave, sequence);
 
-    if (isSupabaseConfigured) {
-      try {
-        nextTransaction = await createIncomeTransactionInSupabase(formForSave);
-        setMessage("Kas masuk berhasil ditambahkan ke Supabase.");
-      } catch (saveError) {
-        setMessage(
-          `${saveError.message || "Supabase belum menerima kas masuk."} Transaksi disimpan lokal untuk demo.`
-        );
-      }
-    } else {
-      setMessage("Kas masuk berhasil ditambahkan ke data dummy.");
+    try {
+      const result = editingId
+        ? await updateTransaction(editingId, "Masuk", formForSave)
+        : await createTransaction("Masuk", formForSave);
+      const action = editingId ? "diperbarui" : "ditambahkan";
+      const fallbackReason = result.error ? ` Supabase: ${result.error}` : "";
+
+      setMessage(
+        `Kas masuk berhasil ${action} ke ${
+          result.source === "supabase" ? "Supabase" : "localStorage fallback"
+        }.${fallbackReason}`
+      );
+      setForm({ ...emptyForm, date: form.date });
+      setEditingId("");
+    } catch (saveError) {
+      setMessage(
+        saveError.message ||
+          "Transaksi gagal disimpan. Jika memakai Supabase, cek tabel, policy, dan profile role bendahara/super admin."
+      );
+    } finally {
+      setSubmitting(false);
     }
+  };
 
-    setTransactions((prev) => [nextTransaction, ...prev]);
-    setForm({ ...emptyForm, date: form.date });
+  const startEdit = (transaction) => {
+    setEditingId(transaction.id);
+    setForm(transactionToForm(transaction));
+    setMessage("Mode edit aktif. Ubah data lalu simpan perubahan.");
+  };
+
+  const cancelEdit = () => {
+    setEditingId("");
+    setForm(emptyForm);
+    setMessage("");
+  };
+
+  const handleDelete = async (transaction) => {
+    const confirmed = window.confirm(
+      `Hapus kas masuk "${transaction.description || transaction.category}"?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const result = await deleteTransaction(transaction.id, "Masuk");
+      setMessage(
+        `Kas masuk berhasil dihapus dari ${
+          result.source === "supabase" ? "Supabase" : "localStorage fallback"
+        }.`
+      );
+      if (editingId === transaction.id) cancelEdit();
+    } catch (deleteError) {
+      setMessage(
+        deleteError.message ||
+          "Transaksi gagal dihapus. Data lokal tidak diubah karena Supabase menolak operasi."
+      );
+    }
   };
 
   return (
@@ -119,11 +163,11 @@ export default function IncomePage() {
                 Form Transaksi
               </p>
               <h2 className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">
-                Form Kas Masuk
+                {editingId ? "Edit Kas Masuk" : "Form Kas Masuk"}
               </h2>
             </div>
           </div>
-          <StatusBadge value="Dummy LocalStorage" />
+          <StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />
         </div>
 
         {message ? (
@@ -171,17 +215,22 @@ export default function IncomePage() {
           </FormField>
 
           <div className="flex flex-col gap-3 sm:flex-row md:col-span-2">
-            <button type="submit" className="brand-button-primary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition">
+            <button type="submit" disabled={submitting} className="brand-button-primary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60">
               <Save size={17} />
-              Simpan Kas Masuk
+              {submitting ? "Menyimpan..." : editingId ? "Simpan Perubahan" : "Simpan Kas Masuk"}
             </button>
+            {editingId ? (
+              <ActionButton icon={X} onClick={cancelEdit}>
+                Batal Edit
+              </ActionButton>
+            ) : null}
             <ActionButton to="/admin/cashflow" icon={ArrowLeft}>Kembali ke Cashflow</ActionButton>
           </div>
         </form>
       </section>
 
-      <DataTable eyebrow="Kas Masuk Terbaru" title="Transaksi pemasukan terakhir">
-        <table className="min-w-[760px] text-left text-sm">
+      <DataTable eyebrow="Kas Masuk" title="Daftar transaksi pemasukan">
+        <table className="min-w-[900px] text-left text-sm">
           <thead>
             <tr className="border-b border-slate-200 dark:border-slate-800">
               <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Tanggal</th>
@@ -189,21 +238,32 @@ export default function IncomePage() {
               <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Sumber</th>
               <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Nominal</th>
               <th className="px-3 py-3 font-semibold text-slate-600 dark:text-slate-300">Status</th>
+              <th className="px-3 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {recentIncome.map((item) => (
+            {incomeTransactions.map((item) => (
               <tr key={item.id} className="brand-table-row border-b border-slate-100 transition dark:border-slate-800">
                 <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{formatFinanceDate(item.date)}</td>
                 <td className="px-3 py-4 font-medium text-slate-900 dark:text-white">{item.category}</td>
                 <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{item.actor}</td>
                 <td className="px-3 py-4 text-right font-bold text-slate-950 dark:text-white">{formatCurrency(item.amount)}</td>
                 <td className="px-3 py-4"><StatusBadge value={item.status} /></td>
+                <td className="px-3 py-4">
+                  <div className="flex justify-end gap-2">
+                    <button type="button" onClick={() => startEdit(item)} className="rounded-xl border border-violet-200 p-2 text-violet-700 transition hover:bg-violet-50 dark:border-violet-900 dark:text-violet-300 dark:hover:bg-violet-950/30" aria-label={`Edit ${item.description}`}>
+                      <Edit2 size={16} />
+                    </button>
+                    <button type="button" onClick={() => handleDelete(item)} className="rounded-xl border border-rose-200 p-2 text-rose-600 transition hover:bg-rose-50 dark:border-rose-900 dark:text-rose-300 dark:hover:bg-rose-950/30" aria-label={`Hapus ${item.description}`}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
-            {recentIncome.length === 0 ? (
+            {incomeTransactions.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
                   Belum ada transaksi kas masuk yang tersimpan.
                 </td>
               </tr>
