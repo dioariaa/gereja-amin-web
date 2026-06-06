@@ -8,11 +8,13 @@ import {
   publicStats,
   sectorProfiles,
   serviceAreas,
+  worshipScheduleGroups,
 } from "../data/publicContentData";
 
 export const PUBLIC_CONTENT_STORAGE_KEYS = {
   home: "amin-cms-home",
   about: "amin-cms-about",
+  fixedSchedules: "amin-cms-fixed-schedules",
   schedules: "amin-cms-schedules-events",
   gallery: "amin-cms-gallery",
   contacts: "amin-cms-contacts",
@@ -60,6 +62,20 @@ export const scheduleStaffRoles = [
   "Songleader",
   "Infokus",
 ];
+
+export const fixedScheduleItemsSeed = worshipScheduleGroups.flatMap((group, groupIndex) =>
+  group.items.map((item, itemIndex) => ({
+    id: `fixed-${toSimpleSlug(group.category)}-${itemIndex + 1}`,
+    category: group.category,
+    title: item.title,
+    time: item.time,
+    location: item.location,
+    notes: item.notes,
+    description: group.description,
+    status: "Aktif",
+    sortOrder: groupIndex * 10 + itemIndex + 1,
+  }))
+);
 
 export const scheduleItemsSeed = [
   {
@@ -168,6 +184,52 @@ export function listActiveItems(items = []) {
   return items
     .filter((item) => item.status !== "Draft" && item.status !== "Arsip")
     .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+}
+
+export function normalizeFixedScheduleItem(item = {}) {
+  return {
+    id: item.id || createRecordId("fixed-schedule"),
+    category: item.category || "Ibadah Utama",
+    title: item.title || "",
+    time: item.time || "",
+    location: item.location || churchInfo.name,
+    notes: item.notes || "",
+    description: item.description || "",
+    status: item.status || "Draft",
+    sortOrder: Number(item.sortOrder) || 99,
+  };
+}
+
+export function listFixedSchedules(items = []) {
+  return items
+    .map(normalizeFixedScheduleItem)
+    .sort((a, b) => {
+      const categoryCompare = (a.category || "").localeCompare(b.category || "");
+      if (categoryCompare !== 0) return categoryCompare;
+      return (a.sortOrder || 0) - (b.sortOrder || 0);
+    });
+}
+
+export function listActiveFixedSchedules(items = []) {
+  return listFixedSchedules(items).filter((item) => item.status !== "Draft" && item.status !== "Arsip");
+}
+
+export function groupFixedSchedulesByCategory(items = []) {
+  return listActiveFixedSchedules(items).reduce((groups, item) => {
+    const existingGroup = groups.find((group) => group.category === item.category);
+
+    if (existingGroup) {
+      existingGroup.items.push(item);
+      return groups;
+    }
+
+    groups.push({
+      category: item.category,
+      description: item.description || "Jadwal ibadah rutin Gereja AMIN Jemaat Tangerang Raya.",
+      items: [item],
+    });
+    return groups;
+  }, []);
 }
 
 export function normalizeScheduleItem(item = {}) {
@@ -311,6 +373,20 @@ export function createEmptySchedule() {
   };
 }
 
+export function createEmptyFixedSchedule() {
+  return {
+    id: "",
+    category: "Ibadah Utama",
+    title: "",
+    time: "Minggu, 10:00 - 12:00 WIB",
+    location: churchInfo.name,
+    notes: "",
+    description: "Jadwal ibadah rutin gereja.",
+    status: "Draft",
+    sortOrder: 99,
+  };
+}
+
 export function createEmptyScheduleAssignment(index = 0) {
   return {
     id: createRecordId("staff"),
@@ -347,6 +423,14 @@ export function createEmptyContactItem() {
 
 export function createRecordId(prefix) {
   return `${prefix}-${Date.now()}`;
+}
+
+function toSimpleSlug(value) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 export {

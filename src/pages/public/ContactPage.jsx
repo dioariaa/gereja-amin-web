@@ -7,10 +7,9 @@ import {
 } from "../../components/public/PublicContent";
 import {
   churchInfo,
-  formatScheduleDateShort,
-  getUpcomingScheduleEvents,
+  listActiveFixedSchedules,
 } from "../../services/publicContentService";
-import { useContactsCms, useSchedulesCms } from "../../hooks/usePublicCmsData";
+import { useContactsCms, useFixedSchedulesCms } from "../../hooks/usePublicCmsData";
 
 const channelIcons = {
   "Alamat Gereja": MapPin,
@@ -20,8 +19,8 @@ const channelIcons = {
 
 export default function ContactPage() {
   const [contactItems] = useContactsCms();
-  const [scheduleItems] = useSchedulesCms();
-  const quickSchedules = getUpcomingScheduleEvents(scheduleItems, 4);
+  const [fixedScheduleItems] = useFixedSchedulesCms();
+  const quickSchedules = listActiveFixedSchedules(fixedScheduleItems).slice(0, 4);
   const activeContacts = contactItems.filter((item) => item.status !== "Draft" && item.status !== "Arsip");
   const phoneContact = activeContacts.find((item) => item.type === "WhatsApp");
   const emailContact = activeContacts.find((item) => item.type === "Email");
@@ -97,7 +96,7 @@ export default function ContactPage() {
                   {item.title}
                 </h3>
                 <p className="mt-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200">
-                  {formatScheduleDateShort(item.eventDate)} - {item.time}
+                  {item.time}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
                   {item.location}

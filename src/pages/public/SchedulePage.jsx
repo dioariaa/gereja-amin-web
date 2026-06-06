@@ -10,13 +10,18 @@ import {
 import {
   churchInfo,
   formatScheduleDate,
+  groupFixedSchedulesByCategory,
   groupSchedulesByDate,
+  listActiveFixedSchedules,
   listActiveScheduleEvents,
 } from "../../services/publicContentService";
-import { useSchedulesCms } from "../../hooks/usePublicCmsData";
+import { useFixedSchedulesCms, useSchedulesCms } from "../../hooks/usePublicCmsData";
 
 export default function SchedulePage() {
+  const [fixedScheduleItems] = useFixedSchedulesCms();
   const [scheduleItems] = useSchedulesCms();
+  const fixedSchedules = listActiveFixedSchedules(fixedScheduleItems);
+  const groupedFixedSchedules = groupFixedSchedulesByCategory(fixedScheduleItems);
   const activeSchedules = listActiveScheduleEvents(scheduleItems);
   const groupedSchedules = groupSchedulesByDate(scheduleItems);
   const nextSchedule = activeSchedules[0];
@@ -33,12 +38,12 @@ export default function SchedulePage() {
 
       <PublicHero
         eyebrow="Jadwal Ibadah"
-        title="Jadwal ibadah per tanggal dan susunan pelayanan"
-        description="Jadwal disusun per event ibadah agar jemaat dapat melihat waktu ibadah, tema, lokasi, dan susunan petugas pelayanan dengan jelas."
+        title="Jadwal ibadah tetap dan jadwal pelayanan per tanggal"
+        description="Jadwal rutin tetap membantu pengunjung menemukan waktu ibadah utama. Jadwal pelayanan per tanggal menampilkan event khusus dengan susunan petugas yang lebih lengkap."
         aside={
           <div className="brand-soft-card p-6">
             <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-              Jadwal terdekat
+              Event pelayanan terdekat
             </p>
             <p className="mt-2 text-3xl font-bold text-violet-800 dark:text-violet-100">
               {nextSchedule ? formatScheduleDate(nextSchedule.eventDate) : "Belum ada jadwal"}
@@ -53,8 +58,8 @@ export default function SchedulePage() {
       <section className="grid gap-5 md:grid-cols-3">
         <InfoCard
           icon={CalendarDays}
-          title="Event per tanggal"
-          description="Jadwal tidak lagi hanya mingguan generik; setiap sesi ibadah punya tanggal dan jam sendiri."
+          title="Jadwal tetap"
+          description={`${fixedSchedules.length} jadwal rutin tampil sebagai informasi utama jemaat dan pengunjung.`}
         />
         <InfoCard
           icon={MapPin}
@@ -63,12 +68,62 @@ export default function SchedulePage() {
         />
         <InfoCard
           icon={UsersRound}
-          title="Susunan petugas"
-          description="Detail jadwal menampilkan petugas seperti khotbah, liturgos, kolektan, musik, dan multimedia."
+          title="Event dengan petugas"
+          description="Event per tanggal menampilkan petugas seperti khotbah, liturgos, kolektan, musik, dan multimedia."
         />
       </section>
 
+      <section className="space-y-6">
+        <SectionHeader
+          eyebrow="Jadwal Ibadah Tetap"
+          title="Ibadah rutin mingguan"
+          description="Informasi jadwal tetap ini juga dipakai sebagai ringkasan di beranda. Tidak memuat susunan petugas detail."
+        />
+        {groupedFixedSchedules.length > 0 ? (
+          <div className="grid gap-5 lg:grid-cols-3">
+            {groupedFixedSchedules.map((group) => (
+              <article key={group.category} className="brand-card p-6">
+                <p className="brand-eyebrow text-xs font-semibold uppercase tracking-[0.18em]">
+                  {group.category}
+                </p>
+                <h3 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">
+                  {group.category}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  {group.description}
+                </p>
+                <div className="mt-5 space-y-3">
+                  {group.items.map((item) => (
+                    <div key={item.id} className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 dark:border-violet-950/60 dark:bg-violet-950/20">
+                      <p className="font-semibold text-slate-950 dark:text-white">
+                        {item.title}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-cyan-700 dark:text-cyan-200">
+                        {item.time}
+                      </p>
+                      <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                        {item.notes}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyPublicState
+            title="Jadwal tetap belum tersedia"
+            description="Admin dapat menambahkan jadwal rutin dari panel CMS tanpa mengganggu jadwal per tanggal."
+          />
+        )}
+      </section>
+
       <section className="space-y-8">
+        <SectionHeader
+          eyebrow="Jadwal Pelayanan Per Tanggal"
+          title="Event ibadah dan susunan pelayanan"
+          description="Setiap event punya tanggal, sesi, keterangan, dan daftar petugas yang dapat dilihat lebih lengkap."
+        />
         {groupedSchedules.length > 0 ? groupedSchedules.map((group) => (
           <div key={group.date} className="space-y-5">
             <SectionHeader

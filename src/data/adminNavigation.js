@@ -122,7 +122,7 @@ export const adminNavigationGroups = [
       {
         to: "/admin/content/schedule",
         label: "Jadwal Ibadah",
-        description: "CRUD jadwal",
+        description: "Tetap & event",
         icon: CalendarDays,
         roles: accessGroups.content,
       },

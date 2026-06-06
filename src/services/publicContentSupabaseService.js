@@ -80,6 +80,35 @@ function commissionToRow(item) {
   };
 }
 
+function fixedScheduleFromRow(row) {
+  return {
+    id: row.cms_key || row.id,
+    category: row.category,
+    title: row.title,
+    time: row.time_label,
+    location: row.location || "",
+    notes: row.notes || "",
+    description: row.description || "",
+    status: normalizeStatus(row.status),
+    sortOrder: row.sort_order || 0,
+  };
+}
+
+function fixedScheduleToRow(item) {
+  return {
+    id: isUuid(item.id) ? item.id : undefined,
+    cms_key: item.id,
+    category: item.category || "Ibadah Utama",
+    title: item.title,
+    time_label: item.time || "",
+    location: item.location || null,
+    notes: item.notes || null,
+    description: item.description || null,
+    status: normalizeStatus(item.status),
+    sort_order: Number(item.sortOrder) || 0,
+  };
+}
+
 function scheduleFromRow(row) {
   return {
     id: row.cms_key || row.id,
@@ -264,6 +293,25 @@ export async function saveCommissionsToSupabase(items) {
   assertSupabase();
   await upsertRows("public_commissions", items.map(commissionToRow), "slug");
   await deleteMissingByKey("public_commissions", "slug", items.map((item) => item.slug));
+}
+
+export async function fetchFixedSchedulesFromSupabase({ includeDrafts = false } = {}) {
+  assertSupabase();
+
+  let query = supabase.from("fixed_worship_schedules").select("*").order("sort_order");
+  if (!includeDrafts) {
+    query = query.eq("status", "Aktif");
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []).map(fixedScheduleFromRow);
+}
+
+export async function saveFixedSchedulesToSupabase(items) {
+  assertSupabase();
+  await upsertRows("fixed_worship_schedules", items.map(fixedScheduleToRow), "cms_key");
+  await deleteMissingByKey("fixed_worship_schedules", "cms_key", items.map((item) => item.id));
 }
 
 export async function fetchSchedulesFromSupabase({ includeDrafts = false } = {}) {

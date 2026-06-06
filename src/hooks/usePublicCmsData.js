@@ -11,6 +11,7 @@ import {
   PUBLIC_CONTENT_STORAGE_KEYS,
   aboutContentSeed,
   contactItemsSeed,
+  fixedScheduleItemsSeed,
   galleryItemsSeed,
   homeContentSeed,
   scheduleItemsSeed,
@@ -18,12 +19,14 @@ import {
 import {
   fetchCommissionsFromSupabase,
   fetchContactsFromSupabase,
+  fetchFixedSchedulesFromSupabase,
   fetchGalleryFromSupabase,
   fetchPublicationsFromSupabase,
   fetchSchedulesFromSupabase,
   fetchSitePage,
   saveCommissionsToSupabase,
   saveContactsToSupabase,
+  saveFixedSchedulesToSupabase,
   saveGalleryToSupabase,
   savePublicationsToSupabase,
   saveSchedulesToSupabase,
@@ -32,12 +35,7 @@ import {
 import { isSupabaseConfigured } from "../lib/supabase";
 import useLocalStorageState from "./useLocalStorageState";
 
-function hasRemoteValue(value) {
-  if (Array.isArray(value)) return value.length > 0;
-  return Boolean(value && typeof value === "object" && Object.keys(value).length > 0);
-}
-
-function useSyncedCmsState(storageKey, initialValue, { loadRemote, saveRemote }) {
+function useSyncedCmsState(storageKey, initialValue, { loadRemote, saveRemote, fallbackWhenEmpty = false }) {
   const [value, setLocalValue] = useLocalStorageState(storageKey, initialValue);
   const [meta, setMeta] = useState(() => ({
     source: isSupabaseConfigured ? "Local fallback" : "Local only",
@@ -57,13 +55,27 @@ function useSyncedCmsState(storageKey, initialValue, { loadRemote, saveRemote })
       .then((remoteValue) => {
         if (cancelled) return;
 
-        if (hasRemoteValue(remoteValue)) {
+        if (remoteValue !== null && remoteValue !== undefined) {
+          if (fallbackWhenEmpty && Array.isArray(remoteValue) && remoteValue.length === 0) {
+            setLocalValue(initialValue);
+            setMeta({
+              source: "Local fallback",
+              error: "Supabase belum punya data untuk konten ini.",
+              isRemoteReady: false,
+            });
+            return;
+          }
+
           setLocalValue(remoteValue);
           setMeta({ source: "Supabase", error: "", isRemoteReady: true });
           return;
         }
 
-        setMeta({ source: "Local fallback", error: "Supabase belum punya data.", isRemoteReady: false });
+        setMeta({
+          source: "Local fallback",
+          error: "Supabase belum punya data untuk halaman ini.",
+          isRemoteReady: false,
+        });
       })
       .catch((error) => {
         if (cancelled) return;
@@ -77,7 +89,7 @@ function useSyncedCmsState(storageKey, initialValue, { loadRemote, saveRemote })
     return () => {
       cancelled = true;
     };
-  }, [loadRemote, setLocalValue]);
+  }, [fallbackWhenEmpty, initialValue, loadRemote, setLocalValue]);
 
   const setValue = useCallback(
     (nextValue) => {
@@ -120,6 +132,9 @@ const savePublications = (value) => savePublicationsToSupabase(value);
 const loadPublicCommissions = () => fetchCommissionsFromSupabase({ includeDrafts: true });
 const loadAdminCommissions = () => fetchCommissionsFromSupabase({ includeDrafts: true });
 const saveCommissions = (value) => saveCommissionsToSupabase(value);
+const loadPublicFixedSchedules = () => fetchFixedSchedulesFromSupabase({ includeDrafts: true });
+const loadAdminFixedSchedules = () => fetchFixedSchedulesFromSupabase({ includeDrafts: true });
+const saveFixedSchedules = (value) => saveFixedSchedulesToSupabase(value);
 const loadPublicSchedules = () => fetchSchedulesFromSupabase({ includeDrafts: true });
 const loadAdminSchedules = () => fetchSchedulesFromSupabase({ includeDrafts: true });
 const saveSchedules = (value) => saveSchedulesToSupabase(value);
@@ -167,11 +182,25 @@ export function useCommissionsCms({ admin = false } = {}) {
   return useSyncedCmsState(COMMISSIONS_STORAGE_KEY, commissionSeed, options);
 }
 
+export function useFixedSchedulesCms({ admin = false } = {}) {
+  const options = useMemo(
+    () => ({
+      loadRemote: admin ? loadAdminFixedSchedules : loadPublicFixedSchedules,
+      saveRemote: admin ? saveFixedSchedules : undefined,
+      fallbackWhenEmpty: !admin,
+    }),
+    [admin]
+  );
+
+  return useSyncedCmsState(PUBLIC_CONTENT_STORAGE_KEYS.fixedSchedules, fixedScheduleItemsSeed, options);
+}
+
 export function useSchedulesCms({ admin = false } = {}) {
   const options = useMemo(
     () => ({
       loadRemote: admin ? loadAdminSchedules : loadPublicSchedules,
       saveRemote: admin ? saveSchedules : undefined,
+      fallbackWhenEmpty: !admin,
     }),
     [admin]
   );

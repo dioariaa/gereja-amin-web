@@ -3,9 +3,8 @@ import { CalendarDays, MapPin, Newspaper, UsersRound } from "lucide-react";
 import heroImage from "../../assets/hero.png";
 import {
   churchInfo,
-  formatScheduleDateShort,
-  getUpcomingScheduleEvents,
   getPrimaryContact,
+  listActiveFixedSchedules,
   ministryPillars,
   publicStats,
   serviceAreas,
@@ -17,9 +16,9 @@ import {
 import {
   useCommissionsCms,
   useContactsCms,
+  useFixedSchedulesCms,
   useHomeContentCms,
   usePublicationsCms,
-  useSchedulesCms,
 } from "../../hooks/usePublicCmsData";
 import {
   InfoCard,
@@ -30,12 +29,12 @@ import {
 
 export default function HomePage() {
   const [homeContent] = useHomeContentCms();
-  const [scheduleItems] = useSchedulesCms();
+  const [fixedScheduleItems] = useFixedSchedulesCms();
   const [contactItems] = useContactsCms();
   const [publications] = usePublicationsCms();
   const [commissions] = useCommissionsCms();
-  const primarySchedules = getUpcomingScheduleEvents(scheduleItems, 3);
-  const nextSchedule = primarySchedules[0];
+  const primarySchedules = listActiveFixedSchedules(fixedScheduleItems).slice(0, 3);
+  const mainFixedSchedule = primarySchedules[0];
   const featuredPublications = listActivePublications(publications).slice(0, 2);
   const featuredCommissions = commissions
     .filter((item) => item.status !== "Draft" && item.status !== "Arsip")
@@ -89,12 +88,12 @@ export default function HomePage() {
             <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur">
               <p className="text-sm text-cyan-100">Ibadah Umum Minggu</p>
               <h2 className="mt-2 text-lg font-semibold">
-                {nextSchedule
-                  ? `${formatScheduleDateShort(nextSchedule.eventDate)}, ${nextSchedule.time}`
+                {mainFixedSchedule
+                  ? mainFixedSchedule.time
                   : "Jadwal segera diperbarui"}
               </h2>
               <p className="mt-2 text-sm text-white/75">
-                {nextSchedule?.title || "Terbuka untuk jemaat dan pengunjung yang ingin beribadah bersama."}
+                {mainFixedSchedule?.title || "Terbuka untuk jemaat dan pengunjung yang ingin beribadah bersama."}
               </p>
             </div>
 
@@ -131,9 +130,9 @@ export default function HomePage() {
 
       <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         <SectionHeader
-          eyebrow="Jadwal Pelayanan"
-          title="Ibadah dan persekutuan utama"
-          description="Informasi yang paling sering dicari pengunjung ditampilkan ringkas di beranda."
+          eyebrow="Jadwal Ibadah Tetap"
+          title="Ibadah dan persekutuan rutin"
+          description="Beranda menampilkan jadwal rutin agar pengunjung cepat menemukan waktu ibadah utama."
           actions={
             <Link to="/jadwal-ibadah" className="brand-link text-sm font-semibold underline underline-offset-4">
               Lihat semua jadwal
@@ -147,8 +146,8 @@ export default function HomePage() {
               key={item.id}
               icon={CalendarDays}
               title={item.title}
-              description={formatScheduleDateShort(item.eventDate)}
-              meta={item.time}
+              description={item.time}
+              meta={item.location}
             />
           ))}
         </div>

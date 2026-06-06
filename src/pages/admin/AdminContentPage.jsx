@@ -23,14 +23,17 @@ import FormField from "../../components/admin/FormField";
 import StatusBadge from "../../components/admin/StatusBadge";
 import SummaryCard from "../../components/admin/SummaryCard";
 import {
+  createEmptyFixedSchedule,
   createEmptyScheduleAssignment,
   createEmptyContactItem,
   createEmptyGalleryItem,
   createEmptySchedule,
   createRecordId,
   formatScheduleDateShort,
+  listFixedSchedules,
   listScheduleEvents,
   normalizeScheduleAssignments,
+  normalizeFixedScheduleItem,
 } from "../../services/publicContentService";
 import {
   formatPublicDate,
@@ -40,6 +43,7 @@ import {
   useAboutContentCms,
   useCommissionsCms,
   useContactsCms,
+  useFixedSchedulesCms,
   useGalleryCms,
   useHomeContentCms,
   usePublicationsCms,
@@ -72,7 +76,7 @@ const sectionMeta = {
   schedule: {
     eyebrow: "CMS Website",
     title: "Kelola Jadwal Ibadah",
-    description: "CRUD jadwal ibadah umum, sekolah minggu, pemuda/remaja, sektor, dan komisi.",
+    description: "Kelola jadwal ibadah tetap dan jadwal pelayanan per tanggal lengkap dengan petugas.",
     icon: CalendarDays,
     publicPath: "/jadwal-ibadah",
   },
@@ -122,6 +126,7 @@ export default function AdminContentPage() {
 
   const [homeContent, setHomeContent, homeMeta] = useHomeContentCms();
   const [aboutContent, setAboutContent, aboutMeta] = useAboutContentCms();
+  const [fixedScheduleItems, setFixedScheduleItems, fixedScheduleMeta] = useFixedSchedulesCms({ admin: true });
   const [scheduleItems, setScheduleItems, scheduleMeta] = useSchedulesCms({ admin: true });
   const [galleryItems, setGalleryItems, galleryMeta] = useGalleryCms({ admin: true });
   const [contactItems, setContactItems, contactMeta] = useContactsCms({ admin: true });
@@ -189,9 +194,14 @@ export default function AdminContentPage() {
       {normalizedSection === "schedule" ? (
         <ScheduleManager
           key={`schedule-${action || "list"}`}
-          items={scheduleItems}
-          onChange={setScheduleItems}
-          initialCreate={action === "tambah-jadwal"}
+          fixedItems={fixedScheduleItems}
+          eventItems={scheduleItems}
+          onFixedChange={setFixedScheduleItems}
+          onEventChange={setScheduleItems}
+          fixedMeta={fixedScheduleMeta}
+          eventMeta={scheduleMeta}
+          initialCreateFixed={action === "tambah-jadwal-tetap"}
+          initialCreateEvent={action === "tambah-jadwal"}
         />
       ) : null}
 
@@ -231,9 +241,14 @@ export default function AdminContentPage() {
 function QuickCreateAction({ section }) {
   if (section === "schedule") {
     return (
-      <ActionButton to="/admin/content/schedule?action=tambah-jadwal" variant="primary" icon={Plus}>
-        Tambah Jadwal
-      </ActionButton>
+      <>
+        <ActionButton to="/admin/content/schedule?action=tambah-jadwal-tetap" icon={Plus}>
+          Tambah Jadwal Tetap
+        </ActionButton>
+        <ActionButton to="/admin/content/schedule?action=tambah-jadwal" variant="primary" icon={Plus}>
+          Tambah Event Pelayanan
+        </ActionButton>
+      </>
     );
   }
 
@@ -397,7 +412,119 @@ function AboutContentManager({ content, onSave }) {
   );
 }
 
-function ScheduleManager({ items, onChange, initialCreate }) {
+function ScheduleManager({
+  fixedItems,
+  eventItems,
+  onFixedChange,
+  onEventChange,
+  fixedMeta,
+  eventMeta,
+  initialCreateFixed,
+  initialCreateEvent,
+}) {
+  return (
+    <div className="space-y-7">
+      <section className="grid gap-4 md:grid-cols-2">
+        <SummaryCard
+          title="Jadwal Ibadah Tetap"
+          value={`${listFixedSchedules(fixedItems).length} item`}
+          description={`Tampil di beranda dan section jadwal rutin. ${fixedMeta?.source || ""}`}
+          icon={CalendarDays}
+        />
+        <SummaryCard
+          title="Jadwal Per Tanggal"
+          value={`${listScheduleEvents(eventItems).length} event`}
+          description={`Punya detail susunan petugas. ${eventMeta?.source || ""}`}
+          icon={UsersRound}
+        />
+      </section>
+
+      <FixedScheduleManager
+        items={fixedItems}
+        onChange={onFixedChange}
+        initialCreate={initialCreateFixed}
+      />
+      <EventScheduleManager
+        items={eventItems}
+        onChange={onEventChange}
+        initialCreate={initialCreateEvent}
+      />
+    </div>
+  );
+}
+
+function FixedScheduleManager({ items, onChange, initialCreate }) {
+  const [modalOpen, setModalOpen] = useState(initialCreate);
+  const [form, setForm] = useState(createEmptyFixedSchedule);
+  const fixedSchedules = listFixedSchedules(items);
+
+  const openCreate = () => {
+    setForm(createEmptyFixedSchedule());
+    setModalOpen(true);
+  };
+
+  const openEdit = (item) => {
+    setForm(item);
+    setModalOpen(true);
+  };
+
+  const saveItem = (event) => {
+    event.preventDefault();
+    if (!form.title.trim()) return;
+
+    const nextItem = normalizeFixedScheduleItem({
+      ...form,
+      id: form.id || createRecordId("fixed-schedule"),
+      sortOrder: Number(form.sortOrder) || 99,
+    });
+
+    upsertItem(items, onChange, nextItem);
+    setModalOpen(false);
+  };
+
+  return (
+    <>
+      <DataTable
+        eyebrow="Jadwal Tetap"
+        title={`${fixedSchedules.length} jadwal rutin tampil di public`}
+        actions={<ActionButton variant="primary" icon={Plus} onClick={openCreate}>Tambah Jadwal Tetap</ActionButton>}
+      >
+        <table className="min-w-[980px] text-left text-sm">
+          <thead>
+            <AdminTableHeader columns={["Kategori", "Nama Jadwal", "Waktu Rutin", "Lokasi", "Status", "Aksi"]} />
+          </thead>
+          <tbody>
+            {fixedSchedules.map((item) => (
+              <tr key={item.id} className="brand-table-row border-b border-slate-100 transition dark:border-slate-800">
+                <td className="px-3 py-4 font-semibold text-slate-950 dark:text-white">{item.category}</td>
+                <td className="px-3 py-4">
+                  <p className="font-semibold text-slate-900 dark:text-white">{item.title}</p>
+                  <p className="mt-1 max-w-md text-xs leading-5 text-slate-500 dark:text-slate-400">{item.notes}</p>
+                </td>
+                <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{item.time}</td>
+                <td className="px-3 py-4 text-slate-700 dark:text-slate-200">{item.location}</td>
+                <td className="px-3 py-4"><StatusBadge value={item.status} /></td>
+                <td className="px-3 py-4">
+                  <RowActions onEdit={() => openEdit(item)} onDelete={() => deleteItem(items, onChange, item.id)} />
+                </td>
+              </tr>
+            ))}
+            {fixedSchedules.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                  Belum ada jadwal tetap. Tambahkan jadwal rutin untuk beranda dan halaman jadwal.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </DataTable>
+      <FixedScheduleModal open={modalOpen} form={form} setForm={setForm} onClose={() => setModalOpen(false)} onSubmit={saveItem} />
+    </>
+  );
+}
+
+function EventScheduleManager({ items, onChange, initialCreate }) {
   const [modalOpen, setModalOpen] = useState(initialCreate);
   const [form, setForm] = useState(createEmptySchedule);
   const scheduleEvents = listScheduleEvents(items);
@@ -430,9 +557,9 @@ function ScheduleManager({ items, onChange, initialCreate }) {
   return (
     <>
       <DataTable
-        eyebrow="CRUD Jadwal"
-        title={`${scheduleEvents.length} event jadwal tersimpan`}
-        actions={<ActionButton variant="primary" icon={Plus} onClick={openCreate}>Tambah Jadwal</ActionButton>}
+        eyebrow="Jadwal Per Tanggal"
+        title={`${scheduleEvents.length} event jadwal pelayanan tersimpan`}
+        actions={<ActionButton variant="primary" icon={Plus} onClick={openCreate}>Tambah Event Pelayanan</ActionButton>}
       >
         <table className="min-w-[1100px] text-left text-sm">
           <thead>
@@ -472,7 +599,7 @@ function ScheduleManager({ items, onChange, initialCreate }) {
             {scheduleEvents.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-3 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                  Belum ada jadwal ibadah. Tambahkan event per tanggal dan jam.
+                  Belum ada jadwal pelayanan per tanggal. Tambahkan event dengan susunan petugas.
                 </td>
               </tr>
             ) : null}
@@ -775,6 +902,40 @@ function CommissionContentManager({
   );
 }
 
+function FixedScheduleModal({ open, form, setForm, onClose, onSubmit }) {
+  return (
+    <AdminModal open={open} title={form.id ? "Edit Jadwal Tetap" : "Tambah Jadwal Tetap"} description="Jadwal rutin ini tampil di beranda dan section Jadwal Ibadah Tetap. Tidak memakai susunan petugas detail." onClose={onClose}>
+      <form className="grid gap-5 md:grid-cols-2" onSubmit={onSubmit}>
+        <FormField label="Kategori">
+          <input name="category" value={form.category} onChange={(event) => updateForm(setForm, event)} className="input-base" placeholder="Ibadah Utama" />
+        </FormField>
+        <FormField label="Status">
+          <StatusSelect value={form.status} onChange={(event) => updateForm(setForm, event)} />
+        </FormField>
+        <FormField label="Nama Jadwal" className="md:col-span-2">
+          <input name="title" value={form.title} onChange={(event) => updateForm(setForm, event)} className="input-base" placeholder="Ibadah Umum Minggu" />
+        </FormField>
+        <FormField label="Waktu Rutin">
+          <input name="time" value={form.time} onChange={(event) => updateForm(setForm, event)} className="input-base" placeholder="Minggu, 10:00 - 12:00 WIB" />
+        </FormField>
+        <FormField label="Urutan">
+          <input type="number" name="sortOrder" value={form.sortOrder} onChange={(event) => updateForm(setForm, event)} className="input-base" />
+        </FormField>
+        <FormField label="Lokasi" className="md:col-span-2">
+          <input name="location" value={form.location} onChange={(event) => updateForm(setForm, event)} className="input-base" />
+        </FormField>
+        <FormField label="Deskripsi Grup" className="md:col-span-2">
+          <textarea name="description" value={form.description || ""} onChange={(event) => updateForm(setForm, event)} rows="3" className="input-base" />
+        </FormField>
+        <FormField label="Catatan Public" className="md:col-span-2">
+          <textarea name="notes" value={form.notes || ""} onChange={(event) => updateForm(setForm, event)} rows="4" className="input-base" />
+        </FormField>
+        <SubmitArea />
+      </form>
+    </AdminModal>
+  );
+}
+
 function ScheduleModal({ open, form, setForm, onClose, onSubmit }) {
   const assignments = form.assignments || [];
   const updateAssignment = (assignmentId, field, value) => {
@@ -804,7 +965,7 @@ function ScheduleModal({ open, form, setForm, onClose, onSubmit }) {
   };
 
   return (
-    <AdminModal open={open} title={form.id ? "Edit Jadwal Ibadah" : "Tambah Jadwal Ibadah"} description="Kelola event ibadah per tanggal, jam, dan susunan petugas pelayanan." onClose={onClose}>
+    <AdminModal open={open} title={form.id ? "Edit Event Pelayanan" : "Tambah Event Pelayanan"} description="Kelola jadwal ibadah atau pelayanan per tanggal, jam, dan susunan petugas pelayanan." onClose={onClose}>
       <form className="grid gap-5 md:grid-cols-2" onSubmit={onSubmit}>
         <FormField label="Tanggal Ibadah">
           <input type="date" name="eventDate" value={form.eventDate || ""} onChange={(event) => updateForm(setForm, event)} className="input-base" />
