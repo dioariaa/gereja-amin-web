@@ -88,6 +88,7 @@ const emptyCommission = {
   description: "",
   focus: [],
   schedule: "",
+  imageUrl: "",
   activities: [],
 };
 
@@ -243,7 +244,7 @@ export default function AdminContentPage() {
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard title="Status Modul" value={isCommissions ? "CRUD" : "Draft"} description="Dummy localStorage." icon={Icon} />
-        <SummaryCard title="Akses Role" value="1 Role" description="Super admin." icon={Settings} />
+        <SummaryCard title="Akses Role" value="2 Role" description="Super admin dan sekretaris." icon={Settings} />
         <SummaryCard title="Aksi Saat Ini" value={actionLabel} description="Dari CTA halaman public." icon={FileText} />
         <SummaryCard title="Koneksi Public" value={section} description={itemSlug || "Halaman utama"} icon={Info} />
       </section>
@@ -293,6 +294,9 @@ export default function AdminContentPage() {
           </FormField>
           <FormField label="Jadwal / Kegiatan">
             <input name="schedule" value={commissionForm.schedule} onChange={handleCommissionChange} className="input-base" placeholder="Sesuai agenda komisi" />
+          </FormField>
+          <FormField label="Image URL" className="md:col-span-2" hint="Opsional. Bisa pakai public URL dari Supabase Storage nanti.">
+            <input name="imageUrl" value={commissionForm.imageUrl || ""} onChange={handleCommissionChange} className="input-base" placeholder="https://..." />
           </FormField>
           <FormField label="Deskripsi" className="md:col-span-2">
             <textarea name="description" value={commissionForm.description} onChange={handleCommissionChange} rows="4" className="input-base" placeholder="Deskripsi singkat komisi" />

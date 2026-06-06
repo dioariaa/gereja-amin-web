@@ -4,6 +4,12 @@ import PublicAdminActionBar, {
   ContentManageButton,
 } from "../../components/public/PublicAdminActionBar";
 import {
+  MediaFrame,
+  PublicHero,
+  SectionHeader,
+  TagList,
+} from "../../components/public/PublicContent";
+import {
   COMMISSIONS_STORAGE_KEY,
   commissionSeed,
   findCommissionBySlug,
@@ -44,24 +50,26 @@ export default function CommissionDetailPage() {
         ]}
       />
 
-      <section className="brand-card rounded-3xl px-6 py-10 md:px-10 md:py-14">
+      <PublicHero
+        eyebrow="Komisi Pelayanan"
+        title={commission.name}
+        description={commission.description}
+        aside={
+          <MediaFrame
+            src={commission.imageUrl}
+            label={commission.shortName}
+            meta="Profil Komisi"
+          />
+        }
+      >
         <Link
           to="/komisi"
-          className="brand-link inline-flex items-center gap-2 text-sm font-semibold"
+          className="brand-link inline-flex items-center gap-2 text-sm font-semibold underline underline-offset-4"
         >
           <ArrowLeft size={16} />
           Kembali ke Komisi
         </Link>
-        <p className="brand-eyebrow mt-8 text-sm font-semibold uppercase tracking-[0.22em]">
-          Komisi Pelayanan
-        </p>
-        <h1 className="mt-3 max-w-4xl text-3xl font-bold text-slate-950 md:text-5xl dark:text-white">
-          {commission.name}
-        </h1>
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 md:text-base dark:text-slate-300">
-          {commission.description}
-        </p>
-      </section>
+      </PublicHero>
 
       <section className="grid gap-5 md:grid-cols-2">
         <InfoCard icon={UserRound} title="Pengurus Komisi" value={commission.chair} />
@@ -69,42 +77,31 @@ export default function CommissionDetailPage() {
       </section>
 
       <section className="brand-card p-6 md:p-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
-              Fokus Pelayanan
-            </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-              Ruang pelayanan {commission.shortName}
-            </h2>
-          </div>
+        <SectionHeader
+          eyebrow="Fokus Pelayanan"
+          title={`Ruang pelayanan ${commission.shortName}`}
+          description="Area pelayanan utama yang menjadi perhatian komisi dalam pembinaan dan kegiatan jemaat."
+          actions={
           <ContentManageButton
             to={`/admin/content/commissions/${commission.slug}?action=content`}
             icon={Settings}
           >
             Tambah Konten Komisi
           </ContentManageButton>
-        </div>
+          }
+        />
 
-        <div className="mt-6 grid gap-3 md:grid-cols-3">
-          {commission.focus.map((item) => (
-            <div
-              key={item}
-              className="rounded-2xl border border-violet-100 bg-violet-50/50 p-4 text-sm font-semibold text-slate-700 dark:border-violet-950/60 dark:bg-violet-950/20 dark:text-slate-200"
-            >
-              {item}
-            </div>
-          ))}
+        <div className="mt-6">
+          <TagList items={commission.focus} />
         </div>
       </section>
 
       <section className="brand-card p-6 md:p-8">
-        <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
-          Jadwal & Kegiatan
-        </p>
-        <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-          Agenda pelayanan {commission.shortName}
-        </h2>
+        <SectionHeader
+          eyebrow="Jadwal & Kegiatan"
+          title={`Agenda pelayanan ${commission.shortName}`}
+          description="Kegiatan ini masih berbasis data dummy/localStorage dan siap disambungkan ke database public content."
+        />
         <div className="mt-6 grid gap-3 md:grid-cols-3">
           {(commission.activities || [commission.schedule]).map((item) => (
             <div
@@ -118,12 +115,11 @@ export default function CommissionDetailPage() {
       </section>
 
       <section className="brand-card p-6 md:p-8">
-        <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
-          Komisi Lainnya
-        </p>
-        <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-          Pelayanan yang saling terhubung
-        </h2>
+        <SectionHeader
+          eyebrow="Komisi Lainnya"
+          title="Pelayanan yang saling terhubung"
+          description="Setiap komisi bergerak dalam koordinasi pelayanan jemaat yang sama."
+        />
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           {relatedCommissions.map((item) => (
             <Link

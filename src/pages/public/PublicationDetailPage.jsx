@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, PenLine } from "lucide-react";
 import PublicAdminActionBar from "../../components/public/PublicAdminActionBar";
+import { MediaFrame } from "../../components/public/PublicContent";
 import {
   PUBLICATIONS_STORAGE_KEY,
   findPublicationBySlug,
@@ -78,6 +79,12 @@ export default function PublicationDetailPage() {
       />
 
       <article className="brand-card overflow-hidden">
+        <MediaFrame
+          src={publication.coverImage}
+          label={publication.coverLabel || publication.category}
+          meta="Publikasi Gereja"
+          className="h-[260px] rounded-none border-0 md:h-[360px]"
+        />
         <div className="border-b border-violet-100 px-6 py-8 md:px-10 md:py-10 dark:border-violet-950/60">
           <Link
             to="/publikasi"
@@ -94,6 +101,11 @@ export default function PublicationDetailPage() {
               <CalendarDays size={16} />
               {formatPublicDate(publication.date)}
             </span>
+            {publication.readingTime ? (
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                {publication.readingTime}
+              </span>
+            ) : null}
           </div>
           <h1 className="mt-4 max-w-4xl text-3xl font-bold leading-tight text-slate-950 md:text-5xl dark:text-white">
             {publication.title}
@@ -106,7 +118,7 @@ export default function PublicationDetailPage() {
           </p>
         </div>
 
-        <div className="px-6 py-8 md:px-10">
+        <div className="px-6 py-8 md:px-10 md:py-10">
           <div className="max-w-3xl space-y-5 text-base leading-8 text-slate-700 dark:text-slate-200">
             {paragraphs.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>

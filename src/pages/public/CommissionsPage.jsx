@@ -4,6 +4,12 @@ import PublicAdminActionBar, {
   ContentManageButton,
 } from "../../components/public/PublicAdminActionBar";
 import {
+  MediaFrame,
+  PublicHero,
+  SectionHeader,
+  TagList,
+} from "../../components/public/PublicContent";
+import {
   COMMISSIONS_STORAGE_KEY,
   commissionSeed,
   getCommissionMetrics,
@@ -36,19 +42,12 @@ export default function CommissionsPage() {
         ]}
       />
 
-      <section className="brand-card rounded-3xl px-6 py-10 md:px-10 md:py-14">
-        <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
-          Komisi Pelayanan
-        </p>
-        <h1 className="mt-3 max-w-4xl text-3xl font-bold text-slate-950 md:text-5xl dark:text-white">
-          Ruang pelayanan Gereja AMIN Jemaat Tangerang Raya
-        </h1>
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 md:text-base dark:text-slate-300">
-          Setiap komisi hadir untuk memperlengkapi jemaat dalam persekutuan,
-          pengajaran, pelayanan kasih, dan pengelolaan kebutuhan gereja secara
-          terarah.
-        </p>
-      </section>
+      <PublicHero
+        eyebrow="Komisi Pelayanan"
+        title="Ruang pelayanan Gereja AMIN Jemaat Tangerang Raya"
+        description="Setiap komisi hadir untuk memperlengkapi jemaat dalam persekutuan, pengajaran, pelayanan kasih, dan pengelolaan kebutuhan gereja secara terarah."
+        aside={<MediaFrame label="Pelayanan jemaat" meta="8 komisi pelayanan" />}
+      />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard title="Total Komisi" value={metrics.total} />
@@ -58,19 +57,24 @@ export default function CommissionsPage() {
       </section>
 
       <section className="space-y-5">
-        <div>
-          <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
-            Daftar Komisi
-          </p>
-          <h2 className="mt-2 text-2xl font-bold text-slate-950 md:text-3xl dark:text-white">
-            Komisi yang melayani jemaat
-          </h2>
-        </div>
+        <SectionHeader
+          eyebrow="Daftar Komisi"
+          title="Komisi yang melayani jemaat"
+          description="Pilih komisi untuk melihat fokus pelayanan, pengurus, dan kegiatan basic yang sudah disiapkan."
+        />
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {commissions.map((commission) => (
-            <article key={commission.slug} className="brand-card flex flex-col p-6 transition hover:-translate-y-1 hover:shadow-md">
-              <div className="flex items-start gap-3">
+            <article key={commission.slug} className="brand-card flex flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-md">
+              <MediaFrame
+                src={commission.imageUrl}
+                label={commission.shortName}
+                meta="Komisi Pelayanan"
+                compact
+                className="rounded-none border-0"
+              />
+              <div className="flex flex-1 flex-col p-6">
+                <div className="flex items-start gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
                   <UsersRound size={20} />
                 </div>
@@ -92,15 +96,8 @@ export default function CommissionsPage() {
                 <InfoLine icon={CalendarDays} label="Jadwal" value={commission.schedule} />
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-2">
-                {commission.focus.map((item) => (
-                  <span
-                    key={item}
-                    className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200"
-                  >
-                    {item}
-                  </span>
-                ))}
+              <div className="mt-5">
+                <TagList items={commission.focus} tone="cyan" />
               </div>
 
               <div className="mt-6 flex flex-col gap-2 sm:flex-row">
@@ -117,6 +114,7 @@ export default function CommissionsPage() {
                 >
                   Kelola
                 </ContentManageButton>
+              </div>
               </div>
             </article>
           ))}

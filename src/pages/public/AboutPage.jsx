@@ -1,15 +1,26 @@
-import { Info, Settings, User } from "lucide-react";
+import { useState } from "react";
+import { Church, Compass, Info, Settings, User } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
 import PublicAdminActionBar from "../../components/public/PublicAdminActionBar";
+import { InfoCard, SectionHeader } from "../../components/public/PublicContent";
+import {
+  aboutTimeline,
+  aboutValues,
+  churchInfo,
+  sectorProfiles,
+} from "../../data/publicContentData";
 
 function PersonCard({ role, name, photo = "" }) {
+  const [hasPhoto, setHasPhoto] = useState(Boolean(photo));
+
   return (
     <div className="group brand-card overflow-hidden rounded-2xl transition hover:-translate-y-1 hover:shadow-md">
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-violet-50 dark:bg-violet-950/20">
-        {photo ? (
+        {hasPhoto ? (
           <img
             src={photo}
             alt={name}
+            onError={() => setHasPhoto(false)}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (
@@ -61,9 +72,9 @@ export default function AboutPage() {
   ];
 
   const highlights = [
-    { title: "Berdiri", value: "24 September 2023" },
-    { title: "Nomor Anggota", value: "102" },
-    { title: "Sinode", value: "Gereja AMIN" },
+    { title: "Berdiri", value: churchInfo.founded },
+    { title: "Nomor Anggota", value: churchInfo.memberNumber },
+    { title: "Sinode", value: churchInfo.synod },
     { title: "Lokasi", value: "Tangerang Selatan" },
   ];
 
@@ -100,7 +111,7 @@ export default function AboutPage() {
           tangguh dalam iman, mandiri dalam pelayanan, dan peduli terhadap sesama.
         </p>
         <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-          Tangguh - Mandiri - Peduli
+          {churchInfo.tagline}
         </p>
       </section>
 
@@ -120,20 +131,80 @@ export default function AboutPage() {
 
       <section className="grid gap-6 lg:grid-cols-2">
         <InfoPanel title="Ringkasan Sejarah" eyebrow="Sejarah Jemaat">
-          Gereja AMIN Jemaat Tangerang Raya berdiri pada 24 September 2023 dan
-          tercatat sebagai anggota Sinode Gereja AMIN dengan Nomor Anggota 102.
+          Gereja AMIN Jemaat Tangerang Raya berdiri pada {churchInfo.founded} dan
+          tercatat sebagai anggota {churchInfo.synod} dengan Nomor Anggota {churchInfo.memberNumber}.
           Jemaat ini hadir untuk membangun ibadah, pembinaan rohani, persekutuan,
           dan pelayanan kasih secara berkelanjutan.
         </InfoPanel>
         <InfoPanel title="Kontak dan Lokasi" eyebrow="Informasi Gereja">
-          Kp. Maruga, Jl. Pembangunan, Kel. Ciater, Kec. Serpong, Kota Tangerang
-          Selatan, Banten 15310. Telepon: 0877-7271-9168. Email:
-          gerejaamintangerangraya@gmail.com.
+          {churchInfo.address}. Telepon: {churchInfo.phone}. Email: {churchInfo.email}.
         </InfoPanel>
+      </section>
+
+      <section className="space-y-5">
+        <SectionHeader
+          eyebrow="Nilai Pelayanan"
+          title="Arah pertumbuhan jemaat"
+          description="Nilai ini menjadi bahasa bersama dalam ibadah, pembinaan keluarga, dan pelayanan lintas komisi."
+        />
+        <div className="grid gap-5 md:grid-cols-3">
+          {aboutValues.map((item) => (
+            <InfoCard
+              key={item.title}
+              icon={Compass}
+              title={item.title}
+              description={item.description}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="brand-card rounded-3xl p-6 md:p-8">
+        <SectionHeader
+          eyebrow="Perjalanan Jemaat"
+          title="Dari penetapan jemaat menuju digitalisasi pelayanan"
+          description="Timeline ini membantu pengunjung memahami konteks pertumbuhan Gereja AMIN Jemaat Tangerang Raya."
+        />
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {aboutTimeline.map((item) => (
+            <div
+              key={item.title}
+              className="rounded-2xl border border-violet-100 bg-violet-50/40 p-5 dark:border-violet-950/60 dark:bg-violet-950/20"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-200">
+                {item.date}
+              </p>
+              <h3 className="mt-2 text-lg font-bold text-slate-950 dark:text-white">
+                {item.title}
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                {item.description}
+              </p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <PeopleSection title="Badan Pekerja Harian Majelis Jemaat" eyebrow="BPHMJ" items={bphmj} />
       <PeopleSection title="Pengurus sektor / kelompok keluarga" eyebrow="Sektor-Sektor" items={sectors} columns="xl:grid-cols-4" />
+      <section className="space-y-5">
+        <SectionHeader
+          eyebrow="Sektor Jemaat"
+          title="Pembinaan keluarga dalam sektor"
+          description="Sektor membantu koordinasi ibadah keluarga, perhatian pastoral, dan komunikasi jemaat."
+        />
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {sectorProfiles.map((sector) => (
+            <InfoCard
+              key={sector.name}
+              icon={Church}
+              title={sector.name}
+              description={sector.area}
+              meta={sector.chair}
+            />
+          ))}
+        </div>
+      </section>
       <PeopleSection title="Komisi pelayanan gereja" eyebrow="Komisi-Komisi" items={commissions} columns="xl:grid-cols-4" />
 
       <section className="rounded-3xl border border-violet-200 bg-[#2c2038] p-6 text-white shadow-sm md:p-8 dark:border-violet-950/60">

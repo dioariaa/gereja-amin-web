@@ -7,6 +7,9 @@ export const publicationSeed = [
     category: "Warta Jemaat",
     title: "Informasi Ibadah Minggu dan Kegiatan Pelayanan",
     excerpt: "Ringkasan ibadah, pengumuman jemaat, dan agenda pelayanan minggu ini.",
+    coverImage: "",
+    coverLabel: "Warta Jemaat",
+    readingTime: "3 menit baca",
     content:
       "Ibadah Minggu dilaksanakan pukul 10.00 WIB di gedung Gereja AMIN Jemaat Tangerang Raya. Jemaat diundang hadir lebih awal untuk mengikuti persiapan ibadah dengan tertib.\n\nAgenda pelayanan minggu ini mencakup ibadah keluarga sektor, pembinaan komisi, dan koordinasi pelayanan musik. Informasi teknis dapat dikonfirmasi melalui pengurus sektor masing-masing.",
     author: "Sekretariat Gereja",
@@ -19,6 +22,9 @@ export const publicationSeed = [
     category: "Renungan Harian",
     title: "Hidup dalam Ketaatan dan Kasih",
     excerpt: "Renungan untuk tetap setia dalam firman dan bertumbuh dalam kasih.",
+    coverImage: "",
+    coverLabel: "Renungan",
+    readingTime: "4 menit baca",
     content:
       "Ketaatan kepada Tuhan bukan sekadar sikap lahiriah, melainkan respons iman yang lahir dari kasih. Jemaat diajak untuk terus bertumbuh dalam firman dan menyatakan kasih Kristus dalam keluarga, pekerjaan, dan pelayanan.\n\nDi tengah kesibukan hidup, gereja menjadi ruang untuk saling menguatkan. Melalui ibadah, doa, dan pelayanan, setiap jemaat dipanggil menjadi saksi yang membawa damai.",
     author: "Tim Renungan",
@@ -31,6 +37,9 @@ export const publicationSeed = [
     category: "Buletin Khotbah",
     title: "Iman yang Hidup dalam Perbuatan",
     excerpt: "Ringkasan firman Tuhan dan poin utama khotbah untuk direnungkan kembali.",
+    coverImage: "",
+    coverLabel: "Buletin Khotbah",
+    readingTime: "5 menit baca",
     content:
       "Iman yang hidup tampak melalui tindakan nyata. Firman Tuhan mengingatkan jemaat agar pelayanan, kepedulian, dan kesaksian hidup berjalan bersama dengan pengakuan iman.\n\nBuletin ini disiapkan sebagai bahan renungan ulang bagi keluarga jemaat setelah ibadah Minggu.",
     author: "Tim Publikasi",
@@ -59,4 +68,3 @@ export function toSlug(value) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
-

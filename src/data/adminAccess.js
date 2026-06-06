@@ -12,7 +12,7 @@ export const roleLabels = {
 
 export const accessGroups = {
   all: [adminRoles.superAdmin],
-  content: [adminRoles.superAdmin],
+  content: [adminRoles.superAdmin, adminRoles.sekretaris],
   finance: [adminRoles.superAdmin, adminRoles.bendahara],
   jemaat: [adminRoles.superAdmin, adminRoles.sekretaris],
   dashboard: [adminRoles.superAdmin, adminRoles.sekretaris, adminRoles.bendahara],

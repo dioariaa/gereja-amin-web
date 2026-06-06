@@ -22,6 +22,9 @@ const emptyForm = {
   title: "",
   excerpt: "",
   content: "",
+  coverImage: "",
+  coverLabel: "",
+  readingTime: "",
   author: "Sekretariat Gereja",
   status: "Draft",
   date: "",
@@ -192,6 +195,15 @@ export default function ArticlesPage() {
           </FormField>
           <FormField label="Ringkasan" className="md:col-span-2">
             <textarea name="excerpt" value={form.excerpt} onChange={handleChange} rows="4" placeholder="Ringkasan singkat" className="input-base" />
+          </FormField>
+          <FormField label="Cover Image URL" className="md:col-span-2" hint="Opsional. Bisa pakai URL publik dari Supabase Storage nanti.">
+            <input name="coverImage" value={form.coverImage || ""} onChange={handleChange} placeholder="https://..." className="input-base" />
+          </FormField>
+          <FormField label="Label Cover">
+            <input name="coverLabel" value={form.coverLabel || ""} onChange={handleChange} placeholder="Warta Jemaat" className="input-base" />
+          </FormField>
+          <FormField label="Estimasi Baca">
+            <input name="readingTime" value={form.readingTime || ""} onChange={handleChange} placeholder="3 menit baca" className="input-base" />
           </FormField>
           <FormField label="Isi Detail" className="md:col-span-2">
             <textarea name="content" value={form.content || ""} onChange={handleChange} rows="6" placeholder="Isi detail publikasi untuk halaman public" className="input-base" />

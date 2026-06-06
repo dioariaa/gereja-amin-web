@@ -2,7 +2,9 @@
 
 1. Buat project di Supabase.
 2. Buka SQL Editor, jalankan `supabase/schema.sql`.
-3. Salin Project URL dan anon key ke `.env.local`:
+3. Untuk mengisi data jemaat dari Excel, jalankan `supabase/seed_jemaat_excel.sql` setelah schema selesai.
+4. Opsional untuk pengelolaan website public, jalankan `supabase/public_content_schema.sql` setelah schema utama selesai.
+5. Salin Project URL dan anon key ke `.env.local`:
 
 ```bash
 VITE_SUPABASE_URL=https://project-ref.supabase.co
@@ -10,8 +12,8 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_ENABLE_DEMO_AUTH=false
 ```
 
-4. Restart dev server Vite.
-5. Buat user di Supabase Authentication, lalu isi row `profiles` dengan `id` yang sama dengan `auth.users.id`.
+6. Restart dev server Vite.
+7. Buat user di Supabase Authentication, lalu isi row `profiles` dengan `id` yang sama dengan `auth.users.id`.
 
 Contoh mapping profile:
 
@@ -27,4 +29,6 @@ Catatan fase ini:
 - `VITE_ENABLE_DEMO_AUTH=true` bisa dipakai sementara untuk mengizinkan fallback dummy walau env Supabase ada, tetapi jangan aktifkan untuk production.
 - Service frontend sudah mencoba membaca Supabase jika env tersedia.
 - Jika Supabase gagal/permission belum siap, UI fallback ke data localStorage/dummy.
+- `seed_jemaat_excel.sql` berisi 55 keluarga, 174 individu, 4 sektor, dan aman dijalankan ulang karena memakai upsert.
+- `public_content_schema.sql` menyiapkan tabel publikasi, komisi public, jadwal, galeri, kontak, dan policy CRUD untuk `super_admin` + `sekretaris`.
 - Sebelum production, aktifkan Supabase Auth penuh dan ketatkan RLS sesuai role di tabel `profiles`.
