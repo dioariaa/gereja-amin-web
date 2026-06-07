@@ -58,17 +58,17 @@ export default function SchedulePage() {
       <section className="grid gap-5 md:grid-cols-3">
         <InfoCard
           icon={CalendarDays}
-          title="Jadwal tetap"
+          title="Jadwal Ibadah"
           description={`${fixedSchedules.length} jadwal rutin tampil sebagai informasi utama jemaat dan pengunjung.`}
         />
         <InfoCard
           icon={MapPin}
-          title="Lokasi ibadah"
+          title="Lokasi Gereja AMIN Tangerang Raya"
           description={churchInfo.address}
         />
         <InfoCard
           icon={UsersRound}
-          title="Event dengan petugas"
+          title="Event & Para Pelayan"
           description="Event per tanggal menampilkan petugas seperti khotbah, liturgos, kolektan, musik, dan multimedia."
         />
       </section>
@@ -76,7 +76,7 @@ export default function SchedulePage() {
       <section className="space-y-6">
         <SectionHeader
           eyebrow="Jadwal Ibadah Tetap"
-          title="Ibadah rutin mingguan"
+          title="Ibadah Mingguan"
           description="Informasi jadwal tetap ini juga dipakai sebagai ringkasan di beranda. Tidak memuat susunan petugas detail."
         />
         {groupedFixedSchedules.length > 0 ? (
@@ -120,8 +120,8 @@ export default function SchedulePage() {
 
       <section className="space-y-8">
         <SectionHeader
-          eyebrow="Jadwal Pelayanan Per Tanggal"
-          title="Event ibadah dan susunan pelayanan"
+          eyebrow="Event & Jadwal"
+          title="Ibadah & Susunan  Petugas Pelayanan"
           description="Setiap event punya tanggal, sesi, keterangan, dan daftar petugas yang dapat dilihat lebih lengkap."
         />
         {groupedSchedules.length > 0 ? groupedSchedules.map((group) => (
