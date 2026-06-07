@@ -38,7 +38,7 @@ export default function SchedulePage() {
 
       <PublicHero
         eyebrow="Jadwal Ibadah"
-        title="JADWAL IBADAH & PELAYANAN GEREJA"
+        title="Jadwal Ibadah & Pelayanan Gereja"
         description="Jadwal rutin tetap membantu pengunjung menemukan waktu ibadah utama. Jadwal pelayanan per tanggal menampilkan event khusus dengan susunan petugas yang lebih lengkap."
         aside={
           <div className="brand-soft-card p-6">
