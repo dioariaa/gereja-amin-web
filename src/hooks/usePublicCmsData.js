@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   COMMISSIONS_STORAGE_KEY,
   commissionSeed,
@@ -36,6 +36,7 @@ import { isSupabaseConfigured } from "../lib/supabase";
 import useLocalStorageState from "./useLocalStorageState";
 
 function useSyncedCmsState(storageKey, initialValue, { loadRemote, saveRemote, fallbackWhenEmpty = false }) {
+  const fallbackValueRef = useRef(initialValue);
   const [value, setLocalValue] = useLocalStorageState(storageKey, initialValue);
   const [meta, setMeta] = useState(() => ({
     source: isSupabaseConfigured ? "Local fallback" : "Local only",
@@ -57,7 +58,7 @@ function useSyncedCmsState(storageKey, initialValue, { loadRemote, saveRemote, f
 
         if (remoteValue !== null && remoteValue !== undefined) {
           if (fallbackWhenEmpty && Array.isArray(remoteValue) && remoteValue.length === 0) {
-            setLocalValue(initialValue);
+            setLocalValue(fallbackValueRef.current);
             setMeta({
               source: "Local fallback",
               error: "Supabase belum punya data untuk konten ini.",
@@ -89,7 +90,7 @@ function useSyncedCmsState(storageKey, initialValue, { loadRemote, saveRemote, f
     return () => {
       cancelled = true;
     };
-  }, [fallbackWhenEmpty, initialValue, loadRemote, setLocalValue]);
+  }, [fallbackWhenEmpty, loadRemote, setLocalValue]);
 
   const setValue = useCallback(
     (nextValue) => {
@@ -163,6 +164,7 @@ export function usePublicationsCms({ admin = false } = {}) {
     () => ({
       loadRemote: admin ? loadAdminPublications : loadPublicPublications,
       saveRemote: admin ? savePublications : undefined,
+      fallbackWhenEmpty: !admin,
     }),
     [admin]
   );
@@ -175,6 +177,7 @@ export function useCommissionsCms({ admin = false } = {}) {
     () => ({
       loadRemote: admin ? loadAdminCommissions : loadPublicCommissions,
       saveRemote: admin ? saveCommissions : undefined,
+      fallbackWhenEmpty: !admin,
     }),
     [admin]
   );
@@ -213,6 +216,7 @@ export function useGalleryCms({ admin = false } = {}) {
     () => ({
       loadRemote: admin ? loadAdminGallery : loadPublicGallery,
       saveRemote: admin ? saveGallery : undefined,
+      fallbackWhenEmpty: !admin,
     }),
     [admin]
   );
@@ -225,6 +229,7 @@ export function useContactsCms({ admin = false } = {}) {
     () => ({
       loadRemote: loadContacts,
       saveRemote: admin ? saveContacts : undefined,
+      fallbackWhenEmpty: !admin,
     }),
     [admin]
   );
