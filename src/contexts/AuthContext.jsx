@@ -273,13 +273,31 @@ export function AuthProvider({ children }) {
   }, [applySupabaseSession, loginDemo]);
 
   const logout = useCallback(async () => {
-    if (isSupabaseConfigured && supabase && user?.authMode === "supabase") {
-      await supabase.auth.signOut();
+    let logoutError = null;
+
+    try {
+      if (isSupabaseConfigured && supabase && user?.authMode === "supabase") {
+        const { error } = await supabase.auth.signOut();
+        if (error) logoutError = error;
+      }
+    } catch (error) {
+      logoutError = error;
+    } finally {
+      persistUser(null);
+      setUser(null);
     }
 
-    persistUser(null);
-    setUser(null);
-  }, [user?.authMode]);
+    if (logoutError) {
+      setAuthError(logoutError.message || "Session lokal sudah ditutup, tetapi logout Supabase gagal.");
+      return {
+        success: false,
+        message: logoutError.message || "Logout Supabase gagal.",
+      };
+    }
+
+    setAuthError("");
+    return { success: true };
+  }, [user]);
 
   const value = useMemo(
     () => ({

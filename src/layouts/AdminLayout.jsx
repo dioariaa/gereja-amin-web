@@ -31,8 +31,8 @@ export default function AdminLayout() {
 
   const pageTitle = useMemo(() => getPageTitle(location.pathname), [location.pathname]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/admin/login", { replace: true });
   };
 

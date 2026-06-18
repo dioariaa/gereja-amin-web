@@ -104,7 +104,7 @@ export default function Sidebar({ open, onClose }) {
             Lihat Website Publik
           </Link>
           <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
-            Menu disesuaikan dengan role akun demo yang sedang digunakan.
+            Menu disesuaikan dengan role akun yang sedang digunakan.
           </p>
         </div>
       </aside>
