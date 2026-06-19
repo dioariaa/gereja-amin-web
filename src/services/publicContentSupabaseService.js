@@ -10,6 +10,25 @@ function normalizeStatus(value) {
   return value || "Aktif";
 }
 
+function normalizeList(value) {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      return value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+  }
+
+  return [];
+}
+
 function publicationFromRow(row) {
   return {
     id: row.id,
@@ -54,9 +73,9 @@ function commissionFromRow(row) {
     shortName: row.short_name || row.name,
     chair: row.chair || "",
     description: row.description || "",
-    focus: row.focus || [],
+    focus: normalizeList(row.focus),
     schedule: row.schedule || "",
-    activities: row.activities || [],
+    activities: normalizeList(row.activities),
     imageUrl: row.image_url || "",
     status: normalizeStatus(row.status),
     sortOrder: row.sort_order || 0,
@@ -120,7 +139,7 @@ function scheduleFromRow(row) {
     location: row.location || "",
     notes: row.notes || "",
     description: row.description || "",
-    assignments: row.assignments || [],
+    assignments: normalizeList(row.assignments),
     status: normalizeStatus(row.status),
     sortOrder: row.sort_order || 0,
   };

@@ -58,7 +58,11 @@ function useSyncedCmsState(storageKey, initialValue, { loadRemote, saveRemote, f
 
         if (remoteValue !== null && remoteValue !== undefined) {
           if (fallbackWhenEmpty && Array.isArray(remoteValue) && remoteValue.length === 0) {
-            setLocalValue(fallbackValueRef.current);
+            setLocalValue((currentValue) =>
+              Array.isArray(currentValue) && currentValue.length > 0
+                ? currentValue
+                : fallbackValueRef.current
+            );
             setMeta({
               source: "Local fallback",
               error: "Supabase belum punya data untuk konten ini.",
@@ -130,14 +134,12 @@ const saveAboutContent = (value) => saveSitePage("about", "Tentang Kami", value)
 const loadPublicPublications = () => fetchPublicationsFromSupabase({ includeDrafts: true });
 const loadAdminPublications = () => fetchPublicationsFromSupabase({ includeDrafts: true });
 const savePublications = (value) => savePublicationsToSupabase(value);
-const loadPublicCommissions = () => fetchCommissionsFromSupabase({ includeDrafts: true });
-const loadAdminCommissions = () => fetchCommissionsFromSupabase({ includeDrafts: true });
+const loadCommissions = () => fetchCommissionsFromSupabase({ includeDrafts: true });
 const saveCommissions = (value) => saveCommissionsToSupabase(value);
 const loadPublicFixedSchedules = () => fetchFixedSchedulesFromSupabase({ includeDrafts: true });
 const loadAdminFixedSchedules = () => fetchFixedSchedulesFromSupabase({ includeDrafts: true });
 const saveFixedSchedules = (value) => saveFixedSchedulesToSupabase(value);
-const loadPublicSchedules = () => fetchSchedulesFromSupabase({ includeDrafts: true });
-const loadAdminSchedules = () => fetchSchedulesFromSupabase({ includeDrafts: true });
+const loadSchedules = () => fetchSchedulesFromSupabase({ includeDrafts: true });
 const saveSchedules = (value) => saveSchedulesToSupabase(value);
 const loadPublicGallery = () => fetchGalleryFromSupabase({ includeDrafts: true });
 const loadAdminGallery = () => fetchGalleryFromSupabase({ includeDrafts: true });
@@ -175,9 +177,9 @@ export function usePublicationsCms({ admin = false } = {}) {
 export function useCommissionsCms({ admin = false } = {}) {
   const options = useMemo(
     () => ({
-      loadRemote: admin ? loadAdminCommissions : loadPublicCommissions,
+      loadRemote: loadCommissions,
       saveRemote: admin ? saveCommissions : undefined,
-      fallbackWhenEmpty: !admin,
+      fallbackWhenEmpty: true,
     }),
     [admin]
   );
@@ -201,9 +203,9 @@ export function useFixedSchedulesCms({ admin = false } = {}) {
 export function useSchedulesCms({ admin = false } = {}) {
   const options = useMemo(
     () => ({
-      loadRemote: admin ? loadAdminSchedules : loadPublicSchedules,
+      loadRemote: loadSchedules,
       saveRemote: admin ? saveSchedules : undefined,
-      fallbackWhenEmpty: !admin,
+      fallbackWhenEmpty: true,
     }),
     [admin]
   );

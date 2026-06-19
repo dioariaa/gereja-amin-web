@@ -880,6 +880,13 @@ function CommissionContentManager({
                 </td>
               </tr>
             ))}
+            {items.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                  Belum ada data komisi yang tersedia.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </DataTable>
