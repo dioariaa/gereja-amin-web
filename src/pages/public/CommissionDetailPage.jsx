@@ -20,6 +20,7 @@ import {
   useCommissionsCms,
   usePublicationsCms,
 } from "../../hooks/usePublicCmsData";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function CommissionDetailPage() {
   const { slug } = useParams();
@@ -92,7 +93,7 @@ export default function CommissionDetailPage() {
         <SectionHeader
           eyebrow="Jadwal & Kegiatan"
           title={`Agenda pelayanan ${commission.shortName}`}
-          description="Kegiatan ini masih berbasis data dummy/localStorage dan siap disambungkan ke database public content."
+          description="Agenda kegiatan disusun berdasarkan program pelayanan komisi dan diperbarui secara berkala."
         />
         <div className="mt-6 grid gap-3 md:grid-cols-3">
           {(commission.activities || [commission.schedule]).map((item) => (
@@ -138,14 +139,14 @@ export default function CommissionDetailPage() {
                 <div className="flex flex-1 flex-col p-5">
                   <div className="flex flex-wrap gap-2">
                     <span className="inline-flex w-fit rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
-                      {item.category}
+                      {toTitleCase(item.category)}
                     </span>
                     <span className="inline-flex w-fit rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
-                      {commission.shortName}
+                      {toTitleCase(commission.shortName)}
                     </span>
                   </div>
                   <h3 className="mt-4 text-lg font-bold leading-tight text-slate-950 transition group-hover:text-violet-700 dark:text-white dark:group-hover:text-violet-200">
-                    {item.title}
+                    {toTitleCase(item.title)}
                   </h3>
                   <p className="mt-3 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-300">
                     {item.excerpt}
@@ -181,7 +182,7 @@ export default function CommissionDetailPage() {
               to={`/komisi/${item.slug}`}
               className="rounded-2xl border border-violet-100 p-4 text-sm font-semibold text-slate-700 transition hover:bg-violet-50 dark:border-violet-950/60 dark:text-slate-200 dark:hover:bg-violet-950/20"
             >
-              {item.shortName}
+              {toTitleCase(item.shortName)}
             </Link>
           ))}
         </div>
@@ -196,7 +197,7 @@ function InfoCard({ icon: Icon, title, value }) {
       <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
         <Icon size={20} />
       </div>
-      <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{title}</p>
+      <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{toTitleCase(title)}</p>
       <p className="mt-2 text-lg font-bold text-slate-950 dark:text-white">{value}</p>
     </div>
   );

@@ -16,6 +16,7 @@ import {
   listActiveScheduleEvents,
 } from "../../services/publicContentService";
 import { useFixedSchedulesCms, useSchedulesCms } from "../../hooks/usePublicCmsData";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function SchedulePage() {
   const [fixedScheduleItems] = useFixedSchedulesCms();
@@ -43,7 +44,7 @@ export default function SchedulePage() {
         aside={
           <div className="brand-soft-card p-6">
             <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-              Event pelayanan terdekat
+              {toTitleCase("Event pelayanan terdekat")}
             </p>
             <p className="mt-2 text-3xl font-bold text-violet-800 dark:text-violet-100">
               {nextSchedule ? formatScheduleDate(nextSchedule.eventDate) : "Belum ada jadwal"}
@@ -84,10 +85,10 @@ export default function SchedulePage() {
             {groupedFixedSchedules.map((group) => (
               <article key={group.category} className="brand-card p-6">
                 <p className="brand-eyebrow text-xs font-semibold uppercase tracking-[0.18em]">
-                  {group.category}
+                  {toTitleCase(group.category)}
                 </p>
                 <h3 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">
-                  {group.category}
+                  {toTitleCase(group.category)}
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
                   {group.description}
@@ -96,7 +97,7 @@ export default function SchedulePage() {
                   {group.items.map((item) => (
                     <div key={item.id} className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 dark:border-violet-950/60 dark:bg-violet-950/20">
                       <p className="font-semibold text-slate-950 dark:text-white">
-                        {item.title}
+                        {toTitleCase(item.title)}
                       </p>
                       <p className="mt-1 text-sm font-semibold text-cyan-700 dark:text-cyan-200">
                         {item.time}
@@ -137,14 +138,14 @@ export default function SchedulePage() {
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="brand-eyebrow text-xs font-semibold uppercase tracking-[0.18em]">
-                        {item.category}
+                        {toTitleCase(item.category)}
                       </p>
                       <h3 className="mt-2 text-xl font-bold text-slate-950 dark:text-white">
-                        {item.title}
+                        {toTitleCase(item.title)}
                       </h3>
                       {item.theme ? (
                         <p className="mt-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200">
-                          {item.theme}
+                          {toTitleCase(item.theme)}
                         </p>
                       ) : null}
                     </div>

@@ -1,3 +1,5 @@
+import { toTitleCase } from "../../utils/textFormat";
+
 export default function SummaryCard({ title, value, description, icon: Icon, tone = "default" }) {
   const toneClass =
     tone === "success"
@@ -12,7 +14,7 @@ export default function SummaryCard({ title, value, description, icon: Icon, ton
     <div className="brand-card h-full p-5 transition duration-200 hover:-translate-y-0.5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{toTitleCase(title)}</p>
           <p className="mt-3 break-words text-2xl font-bold leading-tight tracking-tight text-slate-950 dark:text-white">
             {value}
           </p>

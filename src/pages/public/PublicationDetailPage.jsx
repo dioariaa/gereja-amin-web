@@ -14,6 +14,7 @@ import {
   useCommissionsCms,
   usePublicationsCms,
 } from "../../hooks/usePublicCmsData";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function PublicationDetailPage() {
   const { slug } = useParams();
@@ -37,10 +38,10 @@ export default function PublicationDetailPage() {
 
         <section className="brand-card p-6 md:p-8">
           <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
-            Publikasi Gereja
+            {toTitleCase("Publikasi Gereja")}
           </p>
           <h1 className="mt-2 text-3xl font-bold text-slate-950 dark:text-white">
-            Publikasi tidak ditemukan
+            {toTitleCase("Publikasi tidak ditemukan")}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
             Konten dengan slug ini belum tersedia atau masih tersimpan sebagai draft.
@@ -89,14 +90,14 @@ export default function PublicationDetailPage() {
           </Link>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <span className="inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
-              {publication.category}
+              {toTitleCase(publication.category)}
             </span>
             {relatedCommission ? (
               <Link
                 to={`/komisi/${relatedCommission.slug}`}
                 className="inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 transition hover:bg-cyan-100 dark:bg-cyan-950/30 dark:text-cyan-200 dark:hover:bg-cyan-950/50"
               >
-                {relatedCommission.shortName || relatedCommission.name}
+                {toTitleCase(relatedCommission.shortName || relatedCommission.name)}
               </Link>
             ) : null}
             <span className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
@@ -110,7 +111,7 @@ export default function PublicationDetailPage() {
             ) : null}
           </div>
           <h1 className="mt-4 max-w-4xl text-3xl font-bold leading-tight text-slate-950 md:text-5xl dark:text-white">
-            {publication.title}
+            {toTitleCase(publication.title)}
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600 dark:text-slate-300">
             {publication.excerpt}

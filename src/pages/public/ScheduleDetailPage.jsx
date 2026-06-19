@@ -13,6 +13,7 @@ import {
   listActiveScheduleEvents,
 } from "../../services/publicContentService";
 import { useSchedulesCms } from "../../hooks/usePublicCmsData";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function ScheduleDetailPage() {
   const { scheduleId } = useParams();
@@ -45,7 +46,7 @@ export default function ScheduleDetailPage() {
         aside={
           <div className="brand-soft-card p-6">
             <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-              Tanggal dan jam
+              {toTitleCase("Tanggal dan jam")}
             </p>
             <p className="mt-2 text-2xl font-bold text-violet-800 dark:text-violet-100">
               {formatScheduleDate(schedule.eventDate)}
@@ -108,7 +109,7 @@ export default function ScheduleDetailPage() {
                 className="rounded-2xl border border-violet-100 bg-white p-4 dark:border-violet-950/60 dark:bg-[#15111c]"
               >
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-200">
-                  {assignment.role}
+                  {toTitleCase(assignment.role)}
                 </p>
                 <p className="mt-2 text-base font-bold text-slate-950 dark:text-white">
                   {assignment.name || "-"}
@@ -143,7 +144,7 @@ export default function ScheduleDetailPage() {
                 <UsersRound size={15} />
                 {item.time}
               </span>
-              <p className="mt-2 font-bold text-slate-950 dark:text-white">{item.title}</p>
+              <p className="mt-2 font-bold text-slate-950 dark:text-white">{toTitleCase(item.title)}</p>
               <p className="mt-1 text-slate-500 dark:text-slate-400">{formatScheduleDate(item.eventDate)}</p>
             </Link>
           ))}

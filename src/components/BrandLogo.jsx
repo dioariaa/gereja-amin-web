@@ -1,3 +1,5 @@
+import { toTitleCase } from "../utils/textFormat";
+
 const sizeClasses = {
   sm: "h-10",
   md: "h-12",
@@ -25,7 +27,7 @@ export default function BrandLogo({
           </p>
           {subtitle ? (
             <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-              {subtitle}
+              {toTitleCase(subtitle)}
             </p>
           ) : null}
         </div>

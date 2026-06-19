@@ -246,19 +246,16 @@ export function AuthProvider({ children }) {
           mode: "supabase",
           user: loggedInUser,
         };
-      } catch (loginError) {
+      } catch {
         if (demoAuthEnabled) {
           const fallbackResult = loginDemo({ email, password });
 
           if (fallbackResult.success) {
-            return {
-              ...fallbackResult,
-              message: "Supabase Auth belum siap, masuk memakai mode demo lokal.",
-            };
+            return fallbackResult;
           }
         }
 
-        const message = loginError.message || "Login Supabase gagal.";
+        const message = "Email atau password tidak sesuai.";
         setAuthError(message);
         return {
           success: false,
@@ -288,10 +285,10 @@ export function AuthProvider({ children }) {
     }
 
     if (logoutError) {
-      setAuthError(logoutError.message || "Session lokal sudah ditutup, tetapi logout Supabase gagal.");
+      setAuthError("Sesi telah ditutup, tetapi sinkronisasi akun belum selesai.");
       return {
         success: false,
-        message: logoutError.message || "Logout Supabase gagal.",
+        message: "Sesi telah ditutup. Silakan muat ulang halaman jika status akun belum berubah.",
       };
     }
 

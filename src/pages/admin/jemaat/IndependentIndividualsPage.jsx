@@ -44,7 +44,6 @@ export default function IndependentIndividualsPage() {
     individuals,
     loading: dataLoading,
     setIndividuals,
-    source: dataSource,
   } = useJemaatData();
   const items = listIndependentIndividuals(individuals);
   const [search, setSearch] = useState("");
@@ -95,11 +94,9 @@ export default function IndependentIndividualsPage() {
           ...nextItem,
           id: editingId,
         });
-        setSyncMessage("Individu mandiri tersimpan ke Supabase.");
-      } catch (saveError) {
-        setSyncMessage(
-          `${saveError.message || "Supabase belum menerima individu mandiri."} Perubahan disimpan lokal untuk demo.`
-        );
+        setSyncMessage("Individu mandiri berhasil disimpan.");
+      } catch {
+        setSyncMessage("Perubahan tersimpan pada sesi ini, tetapi sinkronisasi belum berhasil.");
       }
     }
 
@@ -135,11 +132,9 @@ export default function IndependentIndividualsPage() {
     if (isSupabaseConfigured) {
       try {
         await deleteIndividualFromSupabase(id);
-        setSyncMessage("Individu mandiri dihapus dari Supabase.");
-      } catch (deleteError) {
-        setSyncMessage(
-          `${deleteError.message || "Supabase belum menerima hapus individu mandiri."} Data hanya dihapus dari tampilan lokal.`
-        );
+        setSyncMessage("Individu mandiri berhasil dihapus.");
+      } catch {
+        setSyncMessage("Penghapusan belum tersinkron. Daftar pada sesi ini telah diperbarui.");
       }
     }
 
@@ -157,10 +152,7 @@ export default function IndependentIndividualsPage() {
         title="Individu Mandiri"
         description="Data ini berdiri sendiri tanpa keluarga. Semua individu mandiri disimpan dengan familyId kosong dan tetap memakai struktur individu jemaat."
         meta={
-          <>
-            <StatusBadge value="Mandiri" />
-            <StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />
-          </>
+          <StatusBadge value="Mandiri" />
         }
       />
 
@@ -168,7 +160,6 @@ export default function IndependentIndividualsPage() {
         error={dataError}
         label="individu mandiri"
         loading={dataLoading}
-        source={dataSource}
       />
       {syncMessage ? (
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200">

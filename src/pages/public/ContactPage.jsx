@@ -10,6 +10,7 @@ import {
   listActiveFixedSchedules,
 } from "../../services/publicContentService";
 import { useContactsCms, useFixedSchedulesCms } from "../../hooks/usePublicCmsData";
+import { toTitleCase } from "../../utils/textFormat";
 
 const channelIcons = {
   "Alamat Gereja": MapPin,
@@ -42,7 +43,7 @@ export default function ContactPage() {
         aside={
           <div className="brand-soft-card p-6">
             <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-              Kontak utama
+              {toTitleCase("Kontak utama")}
             </p>
             <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
               {phoneContact?.value || churchInfo.phone}
@@ -93,7 +94,7 @@ export default function ContactPage() {
                 className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 dark:border-violet-950/60 dark:bg-violet-950/20"
               >
                 <h3 className="text-base font-semibold text-slate-950 dark:text-white">
-                  {item.title}
+                  {toTitleCase(item.title)}
                 </h3>
                 <p className="mt-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200">
                   {item.time}

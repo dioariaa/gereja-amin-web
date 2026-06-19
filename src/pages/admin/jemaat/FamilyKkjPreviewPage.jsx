@@ -3,7 +3,6 @@ import { ArrowLeft, Printer } from "lucide-react";
 import ActionButton from "../../../components/admin/ActionButton";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
 import DataSourceNotice from "../../../components/admin/DataSourceNotice";
-import StatusBadge from "../../../components/admin/StatusBadge";
 import KkjPreview from "../../../components/jemaat/KkjPreview";
 import {
   findFamilyByIdFrom,
@@ -18,7 +17,6 @@ export default function FamilyKkjPreviewPage() {
     families: localFamilies,
     individuals: localIndividuals,
     loading: dataLoading,
-    source: dataSource,
   } = useJemaatData();
   const family = findFamilyByIdFrom(localFamilies, familyId);
 
@@ -35,7 +33,6 @@ export default function FamilyKkjPreviewPage() {
           eyebrow="Preview / Cetak KKJ"
           title={`KKJ ${family.noKk}`}
           description="Preview laporan keluarga mengikuti format Kartu Keluarga Jemaat, termasuk data anggota, tanggal dikeluarkan, dan area pengesahan."
-          meta={<StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />}
           actions={
             <>
               <ActionButton
@@ -61,7 +58,6 @@ export default function FamilyKkjPreviewPage() {
           error={dataError}
           label="preview KKJ"
           loading={dataLoading}
-          source={dataSource}
         />
       </div>
 

@@ -16,6 +16,7 @@ import {
   transactionStatuses,
 } from "../../services/financeService";
 import useFinanceTransactions from "../../hooks/useFinanceTransactions";
+import { toTitleCase } from "../../utils/textFormat";
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -36,7 +37,6 @@ export default function ExpensePage() {
     deleteTransaction,
     error: dataError,
     loading: dataLoading,
-    source: dataSource,
     transactions,
     updateTransaction,
   } = useFinanceTransactions();
@@ -77,24 +77,16 @@ export default function ExpensePage() {
     };
 
     try {
-      const result = editingId
+      await (editingId
         ? await updateTransaction(editingId, "Keluar", formForSave)
-        : await createTransaction("Keluar", formForSave);
+        : await createTransaction("Keluar", formForSave));
       const action = editingId ? "diperbarui" : "ditambahkan";
-      const fallbackReason = result.error ? ` Supabase: ${result.error}` : "";
 
-      setMessage(
-        `Kas keluar berhasil ${action} ke ${
-          result.source === "supabase" ? "Supabase" : "localStorage fallback"
-        }.${fallbackReason}`
-      );
+      setMessage(`Kas keluar berhasil ${action}.`);
       setForm({ ...emptyForm, date: form.date });
       setEditingId("");
-    } catch (saveError) {
-      setMessage(
-        saveError.message ||
-          "Transaksi gagal disimpan. Jika memakai Supabase, cek tabel, policy, dan profile role bendahara/super admin."
-      );
+    } catch {
+      setMessage("Transaksi gagal disimpan. Silakan periksa data dan coba kembali.");
     } finally {
       setSubmitting(false);
     }
@@ -120,18 +112,11 @@ export default function ExpensePage() {
     if (!confirmed) return;
 
     try {
-      const result = await deleteTransaction(transaction.id, "Keluar");
-      setMessage(
-        `Kas keluar berhasil dihapus dari ${
-          result.source === "supabase" ? "Supabase" : "localStorage fallback"
-        }.`
-      );
+      await deleteTransaction(transaction.id, "Keluar");
+      setMessage("Kas keluar berhasil dihapus.");
       if (editingId === transaction.id) cancelEdit();
-    } catch (deleteError) {
-      setMessage(
-        deleteError.message ||
-          "Transaksi gagal dihapus. Data lokal tidak diubah karena Supabase menolak operasi."
-      );
+    } catch {
+      setMessage("Transaksi gagal dihapus. Silakan coba kembali.");
     }
   };
 
@@ -141,7 +126,6 @@ export default function ExpensePage() {
         eyebrow="Kas Keluar"
         title="Input transaksi kas keluar"
         description="Catat pengeluaran gereja seperti operasional, pelayanan komisi, diakonia, dan pembayaran sinode sesuai format tabelaris."
-        meta={<StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />}
         actions={<ActionButton to="/admin/cashflow" icon={ArrowLeft}>Kembali</ActionButton>}
       />
 
@@ -149,7 +133,6 @@ export default function ExpensePage() {
         error={dataError}
         label="kas keluar"
         loading={dataLoading}
-        source={dataSource}
       />
 
       <section className="brand-card p-5 md:p-6">
@@ -160,14 +143,13 @@ export default function ExpensePage() {
             </div>
             <div>
               <p className="brand-eyebrow text-xs font-semibold uppercase tracking-[0.2em]">
-                Form Transaksi
+                {toTitleCase("Form Transaksi")}
               </p>
               <h2 className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">
-                {editingId ? "Edit Kas Keluar" : "Form Kas Keluar"}
+                {toTitleCase(editingId ? "Edit Kas Keluar" : "Form Kas Keluar")}
               </h2>
             </div>
           </div>
-          <StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />
         </div>
 
         {message ? (

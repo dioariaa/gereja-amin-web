@@ -27,7 +27,6 @@ export default function CashflowPage() {
   const {
     error: dataError,
     loading: dataLoading,
-    source: dataSource,
     transactions: savedTransactions,
   } = useFinanceTransactions();
   const [filters, setFilters] = useState({
@@ -95,7 +94,6 @@ export default function CashflowPage() {
         eyebrow="Cashflow"
         title="Ringkasan aliran kas gereja"
         description="Kelola transaksi kas masuk dan kas keluar dalam satu halaman dengan filter, ringkasan, dan akses cepat ke form input transaksi."
-        meta={<StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />}
         actions={
           <>
             <ActionButton to="/admin/income" variant="primary" icon={ArrowDownCircle}>
@@ -112,7 +110,6 @@ export default function CashflowPage() {
         error={dataError}
         label="transaksi kas"
         loading={dataLoading}
-        source={dataSource}
       />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

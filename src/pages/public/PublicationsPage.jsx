@@ -20,6 +20,7 @@ import {
   useCommissionsCms,
   usePublicationsCms,
 } from "../../hooks/usePublicCmsData";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function PublicationsPage() {
   const [publications] = usePublicationsCms();
@@ -62,7 +63,7 @@ export default function PublicationsPage() {
       <PublicHero
         eyebrow="Publikasi Gereja"
         title="Warta, renungan, dan buletin yang mudah diikuti jemaat."
-        description="Halaman ini menjadi pusat informasi public untuk pengumuman ibadah, renungan, ringkasan firman, dan catatan pelayanan gereja."
+        description="Halaman ini menjadi pusat informasi jemaat untuk pengumuman ibadah, renungan, ringkasan firman, dan catatan pelayanan gereja."
         aside={
           <MediaFrame
             src={featuredPost.coverImage}
@@ -83,15 +84,15 @@ export default function PublicationsPage() {
             />
             <div className="p-6 md:p-8">
               <span className="inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
-                {featuredPost.category}
+                {toTitleCase(featuredPost.category)}
               </span>
               {featuredCommissionLabel ? (
                 <span className="ml-2 inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
-                  {featuredCommissionLabel}
+                  {toTitleCase(featuredCommissionLabel)}
                 </span>
               ) : null}
               <h2 className="mt-4 text-2xl font-bold leading-tight text-slate-950 md:text-3xl dark:text-white">
-                {featuredPost.title}
+                {toTitleCase(featuredPost.title)}
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
                 {featuredPost.excerpt}
@@ -121,7 +122,7 @@ export default function PublicationsPage() {
           <SectionHeader
             eyebrow="Jelajahi Konten"
             title="Filter publikasi"
-            description="Gunakan kategori atau pencarian ringan untuk menemukan konten public yang dibutuhkan."
+            description="Gunakan kategori atau pencarian untuk menemukan informasi yang dibutuhkan."
           />
           <label className="brand-search-box mt-5 flex items-center gap-3 rounded-2xl px-4 py-3">
             <Search size={18} className="shrink-0 text-violet-500" />
@@ -144,7 +145,7 @@ export default function PublicationsPage() {
                     : "border-violet-200 text-slate-700 hover:bg-violet-50 dark:border-violet-950/60 dark:text-slate-200 dark:hover:bg-violet-950/30"
                 }`}
               >
-                {filter}
+                {toTitleCase(filter)}
               </button>
             ))}
           </div>
@@ -175,16 +176,16 @@ export default function PublicationsPage() {
                 <div className="flex flex-1 flex-col p-6">
                   <div className="flex flex-wrap gap-2">
                     <span className="inline-flex w-fit rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
-                      {item.category}
+                      {toTitleCase(item.category)}
                     </span>
                     {getPublicationCommissionLabel(item, commissions) ? (
                       <span className="inline-flex w-fit rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
-                        {getPublicationCommissionLabel(item, commissions)}
+                        {toTitleCase(getPublicationCommissionLabel(item, commissions))}
                       </span>
                     ) : null}
                   </div>
                   <h3 className="mt-4 text-xl font-semibold text-slate-950 dark:text-white">
-                    {item.title}
+                    {toTitleCase(item.title)}
                   </h3>
                   <p className="mt-3 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-300">
                     {item.excerpt}

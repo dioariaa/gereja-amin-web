@@ -50,7 +50,6 @@ export default function IndividualListPage() {
     individuals: localIndividuals,
     loading: dataLoading,
     setIndividuals: setLocalIndividuals,
-    source: dataSource,
   } = useJemaatData();
   const stats = getJemaatStatsFrom(localFamilies, localIndividuals);
   const sectors = getSectorOptionsFrom(localFamilies);
@@ -109,11 +108,9 @@ export default function IndividualListPage() {
     if (isSupabaseConfigured) {
       try {
         nextIndividual = await saveIndividualToSupabase(form);
-        setSyncMessage("Data individu tersimpan ke Supabase.");
-      } catch (saveError) {
-        setSyncMessage(
-          `${saveError.message || "Supabase belum menerima data individu."} Perubahan disimpan lokal untuk demo.`
-        );
+        setSyncMessage("Data individu berhasil disimpan.");
+      } catch {
+        setSyncMessage("Perubahan tersimpan pada sesi ini, tetapi sinkronisasi belum berhasil.");
       }
     }
 
@@ -127,11 +124,9 @@ export default function IndividualListPage() {
     if (isSupabaseConfigured) {
       try {
         await deleteIndividualFromSupabase(id);
-        setSyncMessage("Data individu dihapus dari Supabase.");
-      } catch (deleteError) {
-        setSyncMessage(
-          `${deleteError.message || "Supabase belum menerima hapus individu."} Data hanya dihapus dari tampilan lokal.`
-        );
+        setSyncMessage("Data individu berhasil dihapus.");
+      } catch {
+        setSyncMessage("Penghapusan belum tersinkron. Daftar pada sesi ini telah diperbarui.");
       }
     }
     setLocalIndividuals((prev) => prev.filter((item) => item.id !== id));
@@ -143,7 +138,6 @@ export default function IndividualListPage() {
         eyebrow="Modul Jemaat"
         title="Data Individu"
         description="Data individu mengikuti kolom Excel jemaat seperti No Induk, nama lengkap, panggilan, jenis kelamin, nomor HP, baptis, sidi, dan status jemaat."
-        meta={<StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />}
         actions={
           canManage ? (
             <ActionButton to="/admin/jemaat/individu-mandiri" variant="primary" icon={UserPlus}>
@@ -157,7 +151,6 @@ export default function IndividualListPage() {
         error={dataError}
         label="data individu"
         loading={dataLoading}
-        source={dataSource}
       />
       {syncMessage ? (
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200">
@@ -322,7 +315,7 @@ export default function IndividualListPage() {
       <AdminModal
         open={modalOpen}
         title="Edit Data Individu"
-        description="Edit dummy tersimpan di localStorage dan tidak mengubah data seed asli."
+        description="Perbarui informasi individu sesuai data administrasi jemaat."
         onClose={() => setModalOpen(false)}
       >
         <form className="grid gap-5 md:grid-cols-2" onSubmit={handleSubmit}>

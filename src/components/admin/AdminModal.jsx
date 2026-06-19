@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function AdminModal({ open, title, description, children, onClose }) {
   if (!open) return null;
@@ -9,10 +10,10 @@ export default function AdminModal({ open, title, description, children, onClose
         <div className="flex items-start justify-between gap-4 border-b border-violet-100 p-5 dark:border-violet-950/60">
           <div>
             <p className="brand-eyebrow text-xs font-semibold uppercase tracking-[0.2em]">
-              Form Admin
+              {toTitleCase("Form Admin")}
             </p>
             <h2 className="mt-1 text-xl font-bold text-slate-950 dark:text-white">
-              {title}
+              {toTitleCase(title)}
             </h2>
             {description ? (
               <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">

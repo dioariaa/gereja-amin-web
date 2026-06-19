@@ -1,3 +1,5 @@
+import { toTitleCase } from "../../utils/textFormat";
+
 export default function DataTable({ title, eyebrow, actions, children, footer }) {
   return (
     <section className="brand-card min-w-0 p-5 md:p-6">
@@ -6,12 +8,12 @@ export default function DataTable({ title, eyebrow, actions, children, footer })
           <div className="min-w-0">
             {eyebrow ? (
               <p className="brand-eyebrow text-xs font-semibold uppercase tracking-[0.22em]">
-                {eyebrow}
+                {toTitleCase(eyebrow)}
               </p>
             ) : null}
             {title ? (
               <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950 md:text-2xl dark:text-white">
-                {title}
+                {toTitleCase(title)}
               </h2>
             ) : null}
           </div>

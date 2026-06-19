@@ -4,12 +4,12 @@ import { LockKeyhole, Mail } from "lucide-react";
 import BrandLogo from "../../components/BrandLogo";
 import ThemeToggle from "../../components/ThemeToggle";
 import { useAuth } from "../../contexts/authContextValue";
-import { isSupabaseConfigured } from "../../lib/supabase";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { authLoading, authMode, demoAuthEnabled, login } = useAuth();
+  const { authLoading, login } = useAuth();
 
   const [form, setForm] = useState({
     email: "",
@@ -64,10 +64,10 @@ export default function LoginPage() {
             </div>
 
             <p className="mt-8 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200">
-              Admin Panel
+              {toTitleCase("Admin Panel")}
             </p>
             <h1 className="mt-3 text-4xl font-bold leading-tight">
-              Gereja AMIN Jemaat Tangerang Raya
+              {toTitleCase("Gereja AMIN Jemaat Tangerang Raya")}
             </h1>
             <p className="mt-4 max-w-md text-sm leading-7 opacity-80">
               Panel administrasi untuk mengelola data jemaat, artikel, kas masuk,
@@ -76,18 +76,11 @@ export default function LoginPage() {
           </div>
 
           <div className="rounded-2xl border border-white/15 bg-white/10 p-5 text-sm">
-            <p className="font-semibold">
-              {isSupabaseConfigured ? "Supabase Auth" : "Demo Login"}
+            <p className="font-semibold">{toTitleCase("Akses Administrasi")}</p>
+            <p className="mt-2 leading-6 text-white/75">
+              Masuk menggunakan akun yang telah terdaftar dan memiliki role aktif
+              untuk mengelola pelayanan gereja.
             </p>
-            {isSupabaseConfigured ? (
-              <p className="mb-2 text-white/75">
-                Gunakan akun yang sudah dibuat di Supabase Authentication dan tabel profiles.
-              </p>
-            ) : null}
-            <p>Super Admin: admin@gerejaamin.org</p>
-            <p>Sekretaris: sekretaris@gerejaamin.org</p>
-            <p>Bendahara: bendahara@gerejaamin.org</p>
-            <p>Password: admin123</p>
           </div>
         </div>
 
@@ -96,36 +89,29 @@ export default function LoginPage() {
             <div className="mb-8 lg:hidden">
               <BrandLogo size="lg" subtitle="Admin Panel" />
               <h1 className="mt-4 text-2xl font-bold text-slate-900 dark:text-white">
-                Login Admin
+                {toTitleCase("Login Admin")}
               </h1>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Masuk ke panel administrasi gereja.
               </p>
               <div className="mt-4 rounded-2xl border border-violet-100 bg-violet-50 p-4 text-sm dark:border-violet-950/60 dark:bg-violet-950/20">
-                <p className="font-semibold">
-                  {isSupabaseConfigured ? "Supabase Auth aktif" : "Demo login aktif"}
+                <p className="font-semibold">{toTitleCase("Akses khusus pengurus")}</p>
+                <p className="mt-1 leading-6 text-slate-600 dark:text-slate-300">
+                  Gunakan akun yang telah diberikan sesuai tanggung jawab pelayanan.
                 </p>
-                <p>Super Admin: admin@gerejaamin.org</p>
-                <p>Sekretaris: sekretaris@gerejaamin.org</p>
-                <p>Bendahara: bendahara@gerejaamin.org</p>
-                <p>Password: admin123</p>
               </div>
             </div>
 
             <div className="hidden lg:block">
               <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.2em]">
-                Selamat Datang
+                {toTitleCase("Selamat Datang")}
               </p>
               <h2 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
-                Login Admin
+                {toTitleCase("Login Admin")}
               </h2>
               <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
                 Gunakan akun admin sesuai role untuk mengakses dashboard dan pengelolaan data gereja.
               </p>
-              <div className="mt-4 rounded-2xl border border-violet-100 bg-violet-50 px-4 py-3 text-xs leading-5 text-violet-800 dark:border-violet-950/60 dark:bg-violet-950/25 dark:text-violet-100">
-                Mode auth: {authMode === "supabase" && isSupabaseConfigured ? "Supabase Auth" : "Demo lokal"}
-                {isSupabaseConfigured && demoAuthEnabled ? " + fallback demo aktif" : ""}
-              </div>
             </div>
 
             <form className="mt-8 space-y-5" onSubmit={handleSubmit}>

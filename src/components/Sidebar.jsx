@@ -4,6 +4,7 @@ import BrandLogo from "./BrandLogo";
 import { useAuth } from "../contexts/authContextValue";
 import { getRoleLabel } from "../data/adminAccess";
 import { getVisibleNavigationGroups } from "../data/adminNavigation";
+import { toTitleCase } from "../utils/textFormat";
 
 function navClass({ isActive }) {
   return [
@@ -53,10 +54,10 @@ export default function Sidebar({ open, onClose }) {
 
           <div className="mt-5 rounded-2xl border border-violet-100 bg-violet-50 px-4 py-3 dark:border-violet-950/60 dark:bg-violet-950/20">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-200">
-              Role aktif
+              {toTitleCase("Role aktif")}
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-950 dark:text-white">
-              {getRoleLabel(user?.role)}
+              {toTitleCase(getRoleLabel(user?.role))}
             </p>
           </div>
         </div>
@@ -66,7 +67,7 @@ export default function Sidebar({ open, onClose }) {
             {groups.map((group) => (
               <div key={group.label}>
                 <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-                  {group.label}
+                  {toTitleCase(group.label)}
                 </p>
                 <div className="space-y-1">
                   {group.items.map(({ to, label, description, icon: Icon, end }) => (
@@ -79,7 +80,7 @@ export default function Sidebar({ open, onClose }) {
                     >
                       <Icon size={18} className="mt-0.5 shrink-0" />
                       <span className="min-w-0">
-                        <span className="block leading-5">{label}</span>
+                        <span className="block leading-5">{toTitleCase(label)}</span>
                         {description ? (
                           <span className="block truncate text-xs font-normal opacity-70">
                             {description}

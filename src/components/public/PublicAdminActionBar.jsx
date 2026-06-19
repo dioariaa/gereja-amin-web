@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Settings, ShieldCheck } from "lucide-react";
 import { useAuth } from "../../contexts/authContextValue";
 import { canManagePublicContent } from "../../data/adminAccess";
+import { toTitleCase } from "../../utils/textFormat";
 
 const variantClasses = {
   primary: "brand-button-primary",
@@ -50,7 +51,7 @@ export function PublicAdminShortcut({
       className={`inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white/85 px-3 py-1.5 text-xs font-semibold text-violet-800 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-200 dark:border-violet-900 dark:bg-[#15111c]/85 dark:text-violet-100 dark:hover:bg-violet-950/40 dark:focus-visible:ring-violet-900 ${className}`}
     >
       <Icon size={14} />
-      {label}
+      {toTitleCase(label)}
     </Link>
   );
 }
@@ -77,10 +78,10 @@ export default function PublicAdminActionBar({
         </div>
         <div className="min-w-0">
           <p className="brand-eyebrow text-xs font-semibold uppercase tracking-[0.2em]">
-            Mode Admin
+            {toTitleCase("Mode Admin")}
           </p>
           <h2 className="mt-1 text-base font-bold text-slate-950 dark:text-white">
-            {title}
+            {toTitleCase(title)}
           </h2>
           {description ? (
             <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -99,7 +100,7 @@ export default function PublicAdminActionBar({
             variant={variant}
             className="w-full sm:w-auto"
           >
-            {label}
+            {toTitleCase(label)}
           </ContentManageButton>
         ))}
       </div>

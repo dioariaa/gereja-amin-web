@@ -152,16 +152,19 @@ body {
 
 @media print {
   @page {
-    margin: 14mm;
-    size: A4 landscape;
+    margin: 16mm;
+    size: A4 portrait;
   }
 
   html {
     color-scheme: light;
+    background: white !important;
   }
 
   body {
     background: white !important;
+    margin: 0 !important;
+    width: auto !important;
   }
 
   body * {
@@ -169,19 +172,122 @@ body {
   }
 
   .kkj-print-area,
+  .finance-report-print-area,
   .kkj-print-area *,
+  .finance-report-print-area *,
   .print-area,
   .print-area * {
     visibility: visible;
   }
 
   .kkj-print-area,
+  .finance-report-print-area,
   .print-area {
     position: absolute;
     inset: 0;
     width: 100%;
+    max-width: 100% !important;
+    overflow: visible !important;
     color: #020617 !important;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+  }
+
+  .finance-report-print-area {
+    font-size: 8px;
+    line-height: 1.25;
+  }
+
+  .finance-report-print-area > div:first-child {
+    margin-bottom: 4mm;
+  }
+
+  .finance-report-ledger {
+    break-inside: auto;
+    font-size: 7.5px;
+    line-height: 1.2;
+  }
+
+  .finance-report-ledger thead {
+    display: table-header-group;
+  }
+
+  .finance-report-ledger tr {
+    break-inside: avoid;
+    break-after: auto;
+  }
+
+  .finance-report-ledger th,
+  .finance-report-ledger td {
+    border: 0.2mm solid #94a3b8;
+    overflow-wrap: anywhere;
+    padding: 1.2mm;
+    vertical-align: top;
+  }
+
+  .finance-report-ledger th {
+    background: #f8fafc !important;
+    font-weight: 700;
+  }
+
+  .finance-category-recap,
+  .finance-report-summary {
+    break-inside: avoid;
+  }
+
+  .finance-report-summary {
+    margin-top: 5mm !important;
+  }
+
+  .finance-report-summary > div {
+    border-radius: 0 !important;
+    padding: 3mm !important;
+  }
+
+  .kkj-identity-primary {
+    display: grid;
+    grid-template-columns: 30% 40% 30%;
+    gap: 0;
+  }
+
+  .kkj-identity-secondary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2mm 5mm;
+    margin-top: 3mm;
+    padding-top: 3mm;
+    border-top: 0.2mm solid #cbd5e1;
+  }
+
+  .kkj-print-area table {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .kkj-print-area th,
+  .kkj-print-area td {
+    overflow-wrap: anywhere;
+  }
+}
+
+.kkj-identity-primary {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.kkj-identity-secondary {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .kkj-identity-primary {
+    grid-template-columns: 30% 40% 30%;
+    gap: 0;
+  }
+
+  .kkj-identity-secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { toTitleCase } from "../../utils/textFormat";
 
 const variants = {
   primary: "brand-button-primary shadow-sm hover:-translate-y-0.5",
@@ -23,7 +24,7 @@ export default function ActionButton({
   const content = (
     <>
       {Icon ? <Icon className="shrink-0" size={17} /> : null}
-      {children}
+      {typeof children === "string" ? toTitleCase(children) : children}
     </>
   );
 

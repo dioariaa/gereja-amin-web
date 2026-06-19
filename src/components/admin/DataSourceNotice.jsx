@@ -1,6 +1,6 @@
 import { AlertCircle, Database } from "lucide-react";
 
-export default function DataSourceNotice({ error, loading, source, label = "data" }) {
+export default function DataSourceNotice({ error, loading, label = "data" }) {
   if (!loading && !error) return null;
 
   return (
@@ -13,11 +13,11 @@ export default function DataSourceNotice({ error, loading, source, label = "data
     >
       <div className="flex items-center gap-2 font-semibold">
         {error ? <AlertCircle size={17} /> : <Database size={17} />}
-        {loading ? `Membaca ${label} dari Supabase...` : "Fallback data lokal aktif"}
+        {loading ? `Memuat ${label}...` : "Data belum dapat disinkronkan"}
       </div>
       {error ? (
         <p className="leading-6">
-          {error} UI tetap memakai {source === "supabase" ? "Supabase" : "localStorage/dummy"}.
+          Sebagian informasi mungkin belum diperbarui. Silakan coba kembali beberapa saat lagi.
         </p>
       ) : null}
     </div>

@@ -1,3 +1,5 @@
+import { toTitleCase } from "../../utils/textFormat";
+
 const badgeStyles = {
   Aktif: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
   Selesai: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
@@ -23,12 +25,6 @@ const badgeStyles = {
     "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300",
   "Individu Mandiri":
     "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
-  LocalStorage:
-    "bg-slate-100 text-slate-700 dark:bg-slate-800/80 dark:text-slate-200",
-  Supabase:
-    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
-  "CRUD Komisi":
-    "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300",
   "Editor Konten":
     "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
 };
@@ -42,7 +38,7 @@ export default function StatusBadge({ value, className = "" }) {
     <span
       className={`inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold leading-none ${badgeClass} ${className}`}
     >
-      {value || "-"}
+      {value ? toTitleCase(value) : "-"}
     </span>
   );
 }

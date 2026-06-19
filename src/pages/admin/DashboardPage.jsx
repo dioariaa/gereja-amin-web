@@ -16,6 +16,7 @@ import {
   listFinanceTransactions,
 } from "../../services/financeService";
 import { getJemaatStatsFrom } from "../../services/jemaatService";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -26,7 +27,6 @@ export default function DashboardPage() {
   const {
     error: financeError,
     loading: financeLoading,
-    source: financeSource,
     transactions: financeTransactions,
   } = useFinanceTransactions();
   const {
@@ -34,7 +34,6 @@ export default function DashboardPage() {
     families,
     individuals,
     loading: jemaatLoading,
-    source: jemaatSource,
   } = useJemaatData();
   const normalizedFinanceTransactions = listFinanceTransactions(financeTransactions);
   const financeSummary = getFinanceSummary(normalizedFinanceTransactions);
@@ -77,20 +76,14 @@ export default function DashboardPage() {
       <AdminPageHeader
         eyebrow="Dashboard Admin"
         title={`Ringkasan untuk ${getRoleLabel(role)}`}
-        description="Dashboard menampilkan area kerja yang relevan dengan role akun demo yang sedang digunakan."
-        meta={
-          <>
-            {showFinance ? <StatusBadge value={financeSource === "supabase" ? "Supabase" : "LocalStorage"} /> : null}
-            {showJemaat ? <StatusBadge value={jemaatSource === "supabase" ? "Supabase" : "LocalStorage"} /> : null}
-          </>
-        }
+        description="Dashboard menampilkan area kerja yang relevan dengan role akun yang sedang digunakan."
+        meta={<StatusBadge value={getRoleLabel(role)} />}
       />
 
       <DataSourceNotice
         error={financeError || jemaatError}
         label="dashboard"
         loading={(showFinance && financeLoading) || (showJemaat && jemaatLoading)}
-        source={financeSource === "supabase" || jemaatSource === "supabase" ? "supabase" : "local"}
       />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -134,10 +127,10 @@ export default function DashboardPage() {
         ) : (
           <div className="brand-card p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-              Fokus Sekretariat
+              {toTitleCase("Fokus Sekretariat")}
             </p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-              Kelola data jemaat
+              {toTitleCase("Kelola data jemaat")}
             </h2>
             <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
               Role sekretaris difokuskan untuk data keluarga, data individu, dan
@@ -149,7 +142,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           <div className="brand-card p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-              Akses Cepat
+              {toTitleCase("Akses Cepat")}
             </p>
             <div className="mt-5 grid gap-3">
               {showFinance ? (
@@ -185,10 +178,10 @@ export default function DashboardPage() {
 
           <div className="brand-card p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-              Catatan Demo
+              {toTitleCase("Informasi Sistem")}
             </p>
             <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-              Ringkasan memakai sumber data modul aktif. Jika Supabase belum siap, sistem tetap memakai fallback lokal untuk demo.
+              Ringkasan diperbarui dari data terbaru pada setiap modul yang dapat diakses oleh akun ini.
             </p>
           </div>
         </div>

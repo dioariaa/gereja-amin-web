@@ -28,5 +28,5 @@ export function resolvePublicMediaUrl(value) {
 }
 
 export function getMediaFieldHint() {
-  return `Isi URL penuh atau path Supabase Storage bucket "${PUBLIC_MEDIA_BUCKET}", contoh: publications/warta-minggu.jpg.`;
+  return "Masukkan URL gambar atau lokasi media yang telah tersedia.";
 }

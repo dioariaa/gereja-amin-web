@@ -83,21 +83,21 @@ const sectionMeta = {
   gallery: {
     eyebrow: "CMS Website",
     title: "Kelola Galeri",
-    description: "CRUD album atau item dokumentasi kegiatan gereja.",
+    description: "Kelola album dan dokumentasi kegiatan gereja.",
     icon: Images,
     publicPath: "/galeri",
   },
   contact: {
     eyebrow: "CMS Website",
     title: "Kelola Kontak Gereja",
-    description: "CRUD informasi alamat, telepon, email, maps, dan kanal kontak gereja.",
+    description: "Kelola informasi alamat, telepon, email, peta, dan kanal kontak gereja.",
     icon: Mail,
     publicPath: "/kontak",
   },
   commissions: {
     eyebrow: "CMS Website",
     title: "Kelola Komisi Pelayanan",
-    description: "CRUD profil komisi, pengurus, fokus pelayanan, jadwal, kegiatan, dan visual.",
+    description: "Kelola profil komisi, pengurus, fokus pelayanan, jadwal, kegiatan, dan visual.",
     icon: Settings,
     publicPath: "/komisi",
   },
@@ -124,13 +124,13 @@ export default function AdminContentPage() {
   const meta = sectionMeta[section] || sectionMeta.home;
   const Icon = meta.icon;
 
-  const [homeContent, setHomeContent, homeMeta] = useHomeContentCms();
-  const [aboutContent, setAboutContent, aboutMeta] = useAboutContentCms();
-  const [fixedScheduleItems, setFixedScheduleItems, fixedScheduleMeta] = useFixedSchedulesCms({ admin: true });
-  const [scheduleItems, setScheduleItems, scheduleMeta] = useSchedulesCms({ admin: true });
-  const [galleryItems, setGalleryItems, galleryMeta] = useGalleryCms({ admin: true });
-  const [contactItems, setContactItems, contactMeta] = useContactsCms({ admin: true });
-  const [commissionItems, setCommissionItems, commissionMeta] = useCommissionsCms({ admin: true });
+  const [homeContent, setHomeContent] = useHomeContentCms();
+  const [aboutContent, setAboutContent] = useAboutContentCms();
+  const [fixedScheduleItems, setFixedScheduleItems] = useFixedSchedulesCms({ admin: true });
+  const [scheduleItems, setScheduleItems] = useSchedulesCms({ admin: true });
+  const [galleryItems, setGalleryItems] = useGalleryCms({ admin: true });
+  const [contactItems, setContactItems] = useContactsCms({ admin: true });
+  const [commissionItems, setCommissionItems] = useCommissionsCms({ admin: true });
   const [publicationItems] = usePublicationsCms({ admin: true });
 
   const commission = normalizedSection === "commissions" && itemSlug
@@ -139,20 +139,11 @@ export default function AdminContentPage() {
   const publicPath = commission ? `/komisi/${commission.slug}` : meta.publicPath;
   const pageTitle = commission ? `Kelola ${commission.shortName}` : meta.title;
   const actionLabel = useMemo(
-    () => action ? action.split("-").join(" ").replace(/\b\w/g, (letter) => letter.toUpperCase()) : "CRUD Utama",
+    () => action ? action.split("-").join(" ").replace(/\b\w/g, (letter) => letter.toUpperCase()) : "Kelola Konten",
     [action]
   );
 
   const isCrudSection = ["schedule", "gallery", "contact", "commissions"].includes(normalizedSection);
-  const sourceMeta = {
-    home: homeMeta,
-    about: aboutMeta,
-    schedule: scheduleMeta,
-    gallery: galleryMeta,
-    contact: contactMeta,
-    commissions: commissionMeta,
-  }[normalizedSection] || homeMeta;
-
   return (
     <div className="space-y-7">
       <AdminPageHeader
@@ -161,15 +152,14 @@ export default function AdminContentPage() {
         description={commission ? commission.description : meta.description}
         meta={
           <>
-            <StatusBadge value={isCrudSection ? "CRUD" : "Singleton Page"} />
+            <StatusBadge value={isCrudSection ? "Daftar Konten" : "Konten Halaman"} />
             <StatusBadge value={actionLabel} />
-            <StatusBadge value={sourceMeta.source} />
           </>
         }
         actions={
           <>
             <ActionButton to={publicPath} icon={Eye}>
-              Preview Public
+              Lihat Website
             </ActionButton>
             <QuickCreateAction section={normalizedSection} />
           </>
@@ -179,8 +169,8 @@ export default function AdminContentPage() {
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard title="Domain Konten" value={meta.title.replace("Kelola ", "")} description="Dikelola dari admin panel." icon={Icon} />
         <SummaryCard title="Akses Role" value="2 Role" description="Super admin dan sekretaris." icon={Settings} />
-        <SummaryCard title="Sumber Data" value={sourceMeta.source} description={sourceMeta.error || "Supabase-aware service layer."} icon={FileText} />
-        <SummaryCard title="Public Link" value={publicPath} description="Preview halaman public." icon={ArrowLeft} />
+        <SummaryCard title="Status Konten" value="Aktif" description="Siap dikelola dan dipublikasikan." icon={FileText} />
+        <SummaryCard title="Halaman Website" value={publicPath} description="Lihat hasil konten pada website." icon={ArrowLeft} />
       </section>
 
       {normalizedSection === "home" ? (
@@ -198,8 +188,6 @@ export default function AdminContentPage() {
           eventItems={scheduleItems}
           onFixedChange={setFixedScheduleItems}
           onEventChange={setScheduleItems}
-          fixedMeta={fixedScheduleMeta}
-          eventMeta={scheduleMeta}
           initialCreateFixed={action === "tambah-jadwal-tetap"}
           initialCreateEvent={action === "tambah-jadwal"}
         />
@@ -297,7 +285,7 @@ function HomeContentManager({ content, onSave }) {
       <ContentFormHeader
         eyebrow="Beranda"
         title="Editor konten homepage"
-        description="Beranda tetap bersih di sisi public. Pengelolaan kontennya dilakukan dari admin panel."
+        description="Beranda tetap bersih untuk pengunjung. Pengelolaan kontennya dilakukan dari panel admin."
       />
       <form className="mt-6 grid gap-5 md:grid-cols-2" onSubmit={handleSubmit}>
         <FormField label="Eyebrow Hero">
@@ -373,7 +361,7 @@ function AboutContentManager({ content, onSave }) {
       <ContentFormHeader
         eyebrow="Tentang Kami"
         title="Editor profil gereja"
-        description="Konten yang disimpan di sini langsung dipakai halaman public Tentang Kami."
+        description="Konten yang disimpan di sini langsung digunakan pada halaman Tentang Kami."
       />
       <form className="mt-6 grid gap-5 md:grid-cols-2" onSubmit={handleSubmit}>
         <FormField label="Eyebrow">
@@ -417,8 +405,6 @@ function ScheduleManager({
   eventItems,
   onFixedChange,
   onEventChange,
-  fixedMeta,
-  eventMeta,
   initialCreateFixed,
   initialCreateEvent,
 }) {
@@ -428,13 +414,13 @@ function ScheduleManager({
         <SummaryCard
           title="Jadwal Ibadah Tetap"
           value={`${listFixedSchedules(fixedItems).length} item`}
-          description={`Tampil di beranda dan section jadwal rutin. ${fixedMeta?.source || ""}`}
+          description="Tampil di beranda dan bagian jadwal rutin."
           icon={CalendarDays}
         />
         <SummaryCard
           title="Jadwal Per Tanggal"
           value={`${listScheduleEvents(eventItems).length} event`}
-          description={`Punya detail susunan petugas. ${eventMeta?.source || ""}`}
+          description="Memuat detail susunan petugas pelayanan."
           icon={UsersRound}
         />
       </section>
@@ -486,7 +472,7 @@ function FixedScheduleManager({ items, onChange, initialCreate }) {
     <>
       <DataTable
         eyebrow="Jadwal Tetap"
-        title={`${fixedSchedules.length} jadwal rutin tampil di public`}
+        title={`${fixedSchedules.length} jadwal rutin tampil di website`}
         actions={<ActionButton variant="primary" icon={Plus} onClick={openCreate}>Tambah Jadwal Tetap</ActionButton>}
       >
         <table className="min-w-[980px] text-left text-sm">
@@ -588,7 +574,7 @@ function EventScheduleManager({ items, onChange, initialCreate }) {
                 <td className="px-3 py-4"><StatusBadge value={item.status} /></td>
                 <td className="px-3 py-4">
                   <div className="flex gap-2">
-                    <Link to={`/jadwal-ibadah/${item.id}`} className="brand-button-secondary rounded-xl p-2" title="Detail public">
+                    <Link to={`/jadwal-ibadah/${item.id}`} className="brand-button-secondary rounded-xl p-2" title="Lihat detail">
                       <Eye size={16} />
                     </Link>
                     <RowActions onEdit={() => openEdit(item)} onDelete={() => deleteItem(items, onChange, item.id)} />
@@ -643,7 +629,7 @@ function GalleryManager({ items, onChange, initialCreate }) {
   return (
     <>
       <DataTable
-        eyebrow="CRUD Galeri"
+        eyebrow="Kelola Galeri"
         title={`${items.length} item galeri`}
         actions={<ActionButton variant="primary" icon={Plus} onClick={openCreate}>Tambah Galeri</ActionButton>}
       >
@@ -706,7 +692,7 @@ function ContactManager({ items, onChange, initialCreate }) {
   return (
     <>
       <DataTable
-        eyebrow="CRUD Kontak"
+        eyebrow="Kelola Kontak"
         title={`${items.length} informasi kontak`}
         actions={<ActionButton variant="primary" icon={Plus} onClick={openCreate}>Tambah Kontak</ActionButton>}
       >
@@ -833,7 +819,7 @@ function CommissionContentManager({
                     <td className="px-3 py-4"><StatusBadge value={item.status || "Aktif"} /></td>
                     <td className="px-3 py-4">
                       <div className="flex gap-2">
-                        <Link to={`/publikasi/${item.slug}`} className="brand-button-secondary rounded-xl p-2" title="Preview public">
+                        <Link to={`/publikasi/${item.slug}`} className="brand-button-secondary rounded-xl p-2" title="Lihat publikasi">
                           <Eye size={16} />
                         </Link>
                         <Link to={`/admin/articles?edit=${item.slug}`} className="brand-button-secondary rounded-xl p-2" title="Edit publikasi">
@@ -857,7 +843,7 @@ function CommissionContentManager({
       ) : null}
 
       <DataTable
-        eyebrow="CRUD Komisi"
+        eyebrow="Kelola Komisi"
         title={`${items.length} komisi pelayanan`}
         actions={<ActionButton variant="primary" icon={Plus} onClick={openCreate}>Tambah Komisi</ActionButton>}
       >
@@ -881,7 +867,7 @@ function CommissionContentManager({
                     <Link to={`/admin/content/commissions/${item.slug}`} className="brand-button-secondary rounded-xl p-2" title="Detail admin">
                       <FileText size={16} />
                     </Link>
-                    <Link to={`/komisi/${item.slug}`} className="brand-button-secondary rounded-xl p-2" title="Preview public">
+                    <Link to={`/komisi/${item.slug}`} className="brand-button-secondary rounded-xl p-2" title="Lihat komisi">
                       <Eye size={16} />
                     </Link>
                     <button type="button" className="brand-button-secondary rounded-xl p-2" onClick={() => openEdit(item)} title="Edit">
@@ -927,7 +913,7 @@ function FixedScheduleModal({ open, form, setForm, onClose, onSubmit }) {
         <FormField label="Deskripsi Grup" className="md:col-span-2">
           <textarea name="description" value={form.description || ""} onChange={(event) => updateForm(setForm, event)} rows="3" className="input-base" />
         </FormField>
-        <FormField label="Catatan Public" className="md:col-span-2">
+        <FormField label="Catatan untuk Website" className="md:col-span-2">
           <textarea name="notes" value={form.notes || ""} onChange={(event) => updateForm(setForm, event)} rows="4" className="input-base" />
         </FormField>
         <SubmitArea />
@@ -1060,7 +1046,7 @@ function ScheduleModal({ open, form, setForm, onClose, onSubmit }) {
 
 function GalleryModal({ open, form, setForm, onClose, onSubmit }) {
   return (
-    <AdminModal open={open} title={form.id ? "Edit Galeri" : "Tambah Galeri"} description="Gunakan URL gambar publik dari Supabase Storage ketika media sudah tersedia." onClose={onClose}>
+    <AdminModal open={open} title={form.id ? "Edit Galeri" : "Tambah Galeri"} description="Lengkapi album dan gunakan gambar yang dapat diakses oleh website." onClose={onClose}>
       <form className="grid gap-5 md:grid-cols-2" onSubmit={onSubmit}>
         <FormField label="Kategori">
           <input name="category" value={form.category} onChange={(event) => updateForm(setForm, event)} className="input-base" />
@@ -1077,7 +1063,7 @@ function GalleryModal({ open, form, setForm, onClose, onSubmit }) {
         <FormField label="Jumlah Foto">
           <input type="number" name="count" value={form.count} onChange={(event) => updateForm(setForm, event)} className="input-base" />
         </FormField>
-        <FormField label="Image / Storage Path" className="md:col-span-2" hint={getMediaFieldHint()}>
+        <FormField label="Gambar / URL Media" className="md:col-span-2" hint={getMediaFieldHint()}>
           <input name="imageUrl" value={form.imageUrl || ""} onChange={(event) => updateForm(setForm, event)} className="input-base" placeholder="https://..." />
         </FormField>
         <FormField label="Deskripsi" className="md:col-span-2">
@@ -1094,7 +1080,7 @@ function GalleryModal({ open, form, setForm, onClose, onSubmit }) {
 
 function ContactModal({ open, form, setForm, onClose, onSubmit }) {
   return (
-    <AdminModal open={open} title={form.id ? "Edit Kontak" : "Tambah Kontak"} description="Kontak yang aktif dipakai oleh halaman Beranda dan Kontak public." onClose={onClose}>
+    <AdminModal open={open} title={form.id ? "Edit Kontak" : "Tambah Kontak"} description="Kontak yang aktif digunakan pada halaman Beranda dan Kontak." onClose={onClose}>
       <form className="grid gap-5 md:grid-cols-2" onSubmit={onSubmit}>
         <FormField label="Tipe Kontak">
           <input name="type" value={form.type} onChange={(event) => updateForm(setForm, event)} className="input-base" placeholder="WhatsApp, Email, Alamat Gereja" />
@@ -1131,7 +1117,7 @@ function CommissionModal({ open, form, setForm, onClose, onSubmit }) {
   };
 
   return (
-    <AdminModal open={open} title={form.slug ? "Edit Komisi" : "Tambah Komisi"} description="Data komisi dipakai oleh landing dan detail komisi public." onClose={onClose}>
+    <AdminModal open={open} title={form.slug ? "Edit Komisi" : "Tambah Komisi"} description="Data ini digunakan pada halaman daftar dan detail komisi." onClose={onClose}>
       <form className="grid gap-5 md:grid-cols-2" onSubmit={onSubmit}>
         <FormField label="Nama Komisi" className="md:col-span-2">
           <input name="name" value={form.name} onChange={handleChange} className="input-base" placeholder="Komisi Pelayanan..." />
@@ -1148,7 +1134,7 @@ function CommissionModal({ open, form, setForm, onClose, onSubmit }) {
         <FormField label="Jadwal">
           <input name="schedule" value={form.schedule} onChange={handleChange} className="input-base" />
         </FormField>
-        <FormField label="Image / Storage Path" className="md:col-span-2" hint={getMediaFieldHint()}>
+        <FormField label="Gambar / URL Media" className="md:col-span-2" hint={getMediaFieldHint()}>
           <input name="imageUrl" value={form.imageUrl || ""} onChange={handleChange} className="input-base" placeholder="https://..." />
         </FormField>
         <FormField label="Deskripsi" className="md:col-span-2">
@@ -1157,7 +1143,7 @@ function CommissionModal({ open, form, setForm, onClose, onSubmit }) {
         <FormField label="Fokus Pelayanan" className="md:col-span-2" hint="Pisahkan dengan koma.">
           <input name="focus" value={(form.focus || []).join(", ")} onChange={handleChange} className="input-base" />
         </FormField>
-        <FormField label="Kegiatan Basic" className="md:col-span-2" hint="Pisahkan dengan koma.">
+        <FormField label="Daftar Kegiatan" className="md:col-span-2" hint="Pisahkan dengan koma.">
           <input name="activities" value={(form.activities || []).join(", ")} onChange={handleChange} className="input-base" />
         </FormField>
         <SubmitArea />
@@ -1190,7 +1176,7 @@ function SubmitArea({ publicPath }) {
       </button>
       {publicPath ? (
         <Link to={publicPath} className="brand-button-secondary inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition">
-          Preview Public
+          Lihat Website
         </Link>
       ) : null}
     </div>

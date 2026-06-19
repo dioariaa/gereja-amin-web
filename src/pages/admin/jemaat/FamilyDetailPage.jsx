@@ -64,7 +64,6 @@ export default function FamilyDetailPage() {
     individuals: localIndividuals,
     loading: dataLoading,
     setIndividuals: setLocalIndividuals,
-    source: dataSource,
   } = useJemaatData();
   const [modalOpen, setModalOpen] = useState(false);
   const [memberForm, setMemberForm] = useState(emptyMemberForm);
@@ -110,11 +109,9 @@ export default function FamilyDetailPage() {
           ...nextMember,
           id: memberForm.id,
         });
-        setSyncMessage("Anggota keluarga tersimpan ke Supabase.");
-      } catch (saveError) {
-        setSyncMessage(
-          `${saveError.message || "Supabase belum menerima anggota."} Perubahan disimpan lokal untuk demo.`
-        );
+        setSyncMessage("Anggota keluarga berhasil disimpan.");
+      } catch {
+        setSyncMessage("Perubahan tersimpan pada sesi ini, tetapi sinkronisasi belum berhasil.");
       }
     }
 
@@ -132,11 +129,9 @@ export default function FamilyDetailPage() {
     if (isSupabaseConfigured) {
       try {
         await deleteIndividualFromSupabase(memberId);
-        setSyncMessage("Anggota keluarga dihapus dari Supabase.");
-      } catch (deleteError) {
-        setSyncMessage(
-          `${deleteError.message || "Supabase belum menerima hapus anggota."} Data hanya dihapus dari tampilan lokal.`
-        );
+        setSyncMessage("Anggota keluarga berhasil dihapus.");
+      } catch {
+        setSyncMessage("Penghapusan belum tersinkron. Daftar pada sesi ini telah diperbarui.");
       }
     }
     setLocalIndividuals((prev) => prev.filter((item) => item.id !== memberId));
@@ -152,7 +147,6 @@ export default function FamilyDetailPage() {
           <>
             <StatusBadge value={family.statusKeluarga} />
             <StatusBadge value={family.sektor} />
-            <StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />
           </>
         }
         actions={
@@ -179,7 +173,6 @@ export default function FamilyDetailPage() {
         error={dataError}
         label="detail keluarga"
         loading={dataLoading}
-        source={dataSource}
       />
       {syncMessage ? (
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200">
@@ -292,7 +285,7 @@ export default function FamilyDetailPage() {
       <AdminModal
         open={modalOpen}
         title={memberForm.id ? "Edit Anggota Keluarga" : "Tambah Anggota Keluarga"}
-        description="Anggota tersimpan di localStorage dan langsung muncul di detail keluarga, Data Individu, dan preview KKJ."
+        description="Data anggota akan langsung tersedia pada detail keluarga, Data Individu, dan preview KKJ."
         onClose={() => setModalOpen(false)}
       >
         <form className="grid gap-5 md:grid-cols-2" onSubmit={saveMember}>

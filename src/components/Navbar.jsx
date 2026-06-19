@@ -13,6 +13,7 @@ import BrandLogo from "./BrandLogo";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "../contexts/authContextValue";
 import { getRoleLabel } from "../data/adminAccess";
+import { toTitleCase } from "../utils/textFormat";
 
 const links = [
   { to: "/", label: "Beranda" },
@@ -53,7 +54,7 @@ export default function Navbar() {
           <nav className="flex items-center gap-1">
             {links.map((link) => (
               <NavLink key={link.to} to={link.to} className={navClass}>
-                {link.label}
+                {toTitleCase(link.label)}
               </NavLink>
             ))}
           </nav>
@@ -97,7 +98,7 @@ export default function Navbar() {
                 className={navClass}
                 onClick={() => setIsOpen(false)}
               >
-                {link.label}
+                {toTitleCase(link.label)}
               </NavLink>
             ))}
 
@@ -120,7 +121,7 @@ function DesktopAuthActions({ authLoading, isAuthenticated, user, onLogout }) {
     return (
       <div
         className="h-11 w-40 animate-pulse rounded-xl bg-violet-100 dark:bg-violet-950/40"
-        aria-label="Memeriksa session admin"
+        aria-label="Memeriksa status akun"
       />
     );
   }
@@ -150,7 +151,7 @@ function DesktopAuthActions({ authLoading, isAuthenticated, user, onLogout }) {
             {user?.name || "Admin Gereja"}
           </span>
           <span className="block truncate text-[11px] text-slate-500 dark:text-slate-400">
-            {getRoleLabel(user?.role)}
+            {toTitleCase(getRoleLabel(user?.role))}
           </span>
         </span>
       </div>
@@ -181,7 +182,7 @@ function MobileTopAuthAction({ authLoading, isAuthenticated }) {
     return (
       <div
         className="h-10 w-10 animate-pulse rounded-xl bg-violet-100 dark:bg-violet-950/40"
-        aria-label="Memeriksa session admin"
+        aria-label="Memeriksa status akun"
       />
     );
   }
@@ -235,7 +236,7 @@ function MobileAuthPanel({
             {user?.name || "Admin Gereja"}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {getRoleLabel(user?.role)}
+            {toTitleCase(getRoleLabel(user?.role))}
           </p>
         </div>
       </div>

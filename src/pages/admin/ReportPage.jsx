@@ -5,7 +5,6 @@ import AdminPageHeader from "../../components/admin/AdminPageHeader";
 import DataSourceNotice from "../../components/admin/DataSourceNotice";
 import FilterPanel from "../../components/admin/FilterPanel";
 import FormField from "../../components/admin/FormField";
-import StatusBadge from "../../components/admin/StatusBadge";
 import SummaryCard from "../../components/admin/SummaryCard";
 import {
   expenseCategories,
@@ -17,6 +16,7 @@ import {
   listFinanceTransactions,
 } from "../../services/financeService";
 import useFinanceTransactions from "../../hooks/useFinanceTransactions";
+import { toTitleCase } from "../../utils/textFormat";
 
 const monthOptions = [
   { label: "Januari", value: "01" },
@@ -41,7 +41,6 @@ export default function ReportPage() {
   const {
     error: dataError,
     loading: dataLoading,
-    source: dataSource,
     transactions: savedTransactions,
   } = useFinanceTransactions();
   const [month, setMonth] = useState(currentMonth);
@@ -139,7 +138,6 @@ export default function ReportPage() {
         eyebrow="Laporan Kas"
         title="Buku Kas dan Bank Tabelaris"
         description="Format laporan mengikuti referensi Excel dan dihitung dari transaksi kas yang sama dengan Cashflow."
-        meta={<StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />}
         actions={
           <>
             <ActionButton icon={Printer} onClick={() => window.print()}>
@@ -156,7 +154,6 @@ export default function ReportPage() {
         error={dataError}
         label="laporan kas"
         loading={dataLoading}
-        source={dataSource}
       />
 
       <FilterPanel columns="md:grid-cols-3">
@@ -184,14 +181,18 @@ export default function ReportPage() {
         <SummaryCard title="Saldo Bulan Ini" value={formatCurrency(totals.balance)} description="Saldo akhir tabelaris." icon={Wallet} />
       </section>
 
-      <section className="kkj-print-area print-area brand-card overflow-hidden p-4 md:p-6 print:rounded-none print:border-0 print:p-0 print:shadow-none">
+      <section className="finance-report-print-area print-area brand-card overflow-hidden p-4 md:p-6 print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <div className="mb-5 text-center text-slate-950 dark:text-white print:text-slate-950">
-          <h2 className="text-xl font-bold uppercase tracking-wide">Buku Kas dan Bank Tabelaris</h2>
-          <p className="mt-1 text-sm font-semibold uppercase">Gereja AMIN Jemaat Tangerang Raya</p>
+          <h2 className="text-xl font-bold uppercase tracking-wide">
+            {toTitleCase("Buku Kas dan Bank Tabelaris")}
+          </h2>
+          <p className="mt-1 text-sm font-semibold uppercase">
+            {toTitleCase("Gereja AMIN Jemaat Tangerang Raya")}
+          </p>
           <p className="mt-1 text-sm uppercase">Bulan: {selectedMonth.label} | Tahun: {year}</p>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="finance-report-screen-table overflow-x-auto print:hidden">
           <table className="min-w-[2200px] border-collapse text-left text-[11px] text-slate-950 dark:text-slate-100 print:text-slate-950">
             <thead>
               <tr>
@@ -272,7 +273,65 @@ export default function ReportPage() {
           </table>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+        <div className="finance-report-portrait hidden print:block">
+          <table className="finance-report-ledger w-full table-fixed border-collapse text-left">
+            <colgroup>
+              <col className="w-[12%]" />
+              <col className="w-[10%]" />
+              <col className="w-[27%]" />
+              <col className="w-[25%]" />
+              <col className="w-[10%]" />
+              <col className="w-[16%]" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Jenis</th>
+                <th>Uraian</th>
+                <th>Kategori</th>
+                <th>No. Bukti</th>
+                <th>Nominal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.length > 0 ? (
+                transactions.map((item) => (
+                  <tr key={`print-${item.id}`}>
+                    <td>{formatShortFinanceDate(item.date)}</td>
+                    <td>{item.type}</td>
+                    <td>{item.description || item.category}</td>
+                    <td>{item.category}</td>
+                    <td>{item.proof || "-"}</td>
+                    <td className="text-right">{formatNumber(item.amount)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="py-5 text-center">
+                    Belum Ada Transaksi Pada Periode Ini.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div className="finance-category-recap mt-5 grid grid-cols-2 gap-4">
+            <CategoryRecap
+              title="Rekap Penerimaan"
+              categories={incomeCategories}
+              totals={totals.receiptTotals}
+              total={totals.receiptTotal}
+            />
+            <CategoryRecap
+              title="Rekap Pengeluaran"
+              categories={expenseCategories}
+              totals={totals.expenseTotals}
+              total={totals.expenseTotal}
+            />
+          </div>
+        </div>
+
+        <div className="finance-report-summary mt-8 grid gap-6 lg:grid-cols-[1fr_0.9fr] print:grid-cols-2 print:gap-4">
           <div className="rounded-2xl border border-violet-100 p-5 print:border-slate-400">
             <p className="text-sm leading-7 text-slate-700 dark:text-slate-200 print:text-slate-950">
               Pada akhir periode {selectedMonth.label} {year}, Kas Umum ditutup dengan keadaan:
@@ -358,6 +417,36 @@ function Signature({ name, role }) {
       <p className="text-sm font-bold text-slate-950 dark:text-white print:text-slate-950">{name}</p>
       <p className="text-sm text-slate-600 dark:text-slate-300 print:text-slate-950">{role}</p>
     </div>
+  );
+}
+
+function CategoryRecap({ title, categories, totals, total }) {
+  return (
+    <table className="w-full table-fixed border-collapse text-[8px]">
+      <thead>
+        <tr>
+          <th colSpan={2} className="border border-slate-400 px-2 py-1.5 text-left">
+            {title}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {categories.map((category) => (
+          <tr key={category}>
+            <td className="border border-slate-300 px-2 py-1">{category}</td>
+            <td className="w-[30%] border border-slate-300 px-2 py-1 text-right">
+              {formatNumber(totals[category] || 0)}
+            </td>
+          </tr>
+        ))}
+        <tr className="font-bold">
+          <td className="border border-slate-400 px-2 py-1.5">Total</td>
+          <td className="border border-slate-400 px-2 py-1.5 text-right">
+            {formatNumber(total)}
+          </td>
+        </tr>
+      </tbody>
+    </table>
   );
 }
 

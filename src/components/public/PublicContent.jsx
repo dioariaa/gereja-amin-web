@@ -1,5 +1,6 @@
 import { Image as ImageIcon } from "lucide-react";
 import { resolvePublicMediaUrl } from "../../services/mediaService";
+import { toTitleCase } from "../../utils/textFormat";
 
 export function SectionHeader({
   eyebrow,
@@ -23,11 +24,11 @@ export function SectionHeader({
       <div className={isCenter ? "max-w-3xl" : "max-w-3xl"}>
         {eyebrow ? (
           <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
-            {eyebrow}
+            {toTitleCase(eyebrow)}
           </p>
         ) : null}
         <h2 className="mt-2 text-2xl font-bold leading-tight text-slate-950 md:text-3xl dark:text-white">
-          {title}
+          {toTitleCase(title)}
         </h2>
         {description ? (
           <p className="mt-3 text-sm leading-7 text-slate-600 md:text-base dark:text-slate-300">
@@ -56,11 +57,11 @@ export function PublicHero({
         <div>
           {eyebrow ? (
             <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
-              {eyebrow}
+              {toTitleCase(eyebrow)}
             </p>
           ) : null}
           <h1 className="mt-3 max-w-4xl text-3xl font-bold leading-tight text-slate-950 md:text-5xl dark:text-white">
-            {title}
+            {toTitleCase(title)}
           </h1>
           {description ? (
             <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 md:text-base dark:text-slate-300">
@@ -104,11 +105,11 @@ export function MediaFrame({
           <div>
             {meta ? (
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-200">
-                {meta}
+                {toTitleCase(meta)}
               </p>
             ) : null}
             <p className="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-              {label || "Media gereja"}
+              {toTitleCase(label || "Media gereja")}
             </p>
           </div>
         </div>
@@ -128,11 +129,11 @@ export function InfoCard({ icon: Icon, title, description, meta, children, class
       ) : null}
       {meta ? (
         <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-200">
-          {meta}
+          {toTitleCase(meta)}
         </p>
       ) : null}
       <h3 className={Icon || meta ? "mt-2 text-lg font-bold text-slate-950 dark:text-white" : "text-lg font-bold text-slate-950 dark:text-white"}>
-        {title}
+        {toTitleCase(title)}
       </h3>
       {description ? (
         <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
@@ -154,7 +155,7 @@ export function TagList({ items = [], tone = "violet" }) {
     <div className="flex flex-wrap gap-2">
       {items.map((item) => (
         <span key={item} className={`rounded-full px-3 py-1 text-xs font-semibold ${className}`}>
-          {item}
+          {toTitleCase(item)}
         </span>
       ))}
     </div>
@@ -164,7 +165,7 @@ export function TagList({ items = [], tone = "violet" }) {
 export function EmptyPublicState({ title, description }) {
   return (
     <div className="brand-card p-6 text-center">
-      <p className="text-base font-semibold text-slate-950 dark:text-white">{title}</p>
+      <p className="text-base font-semibold text-slate-950 dark:text-white">{toTitleCase(title)}</p>
       <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
         {description}
       </p>

@@ -1,8 +1,10 @@
+import { toTitleCase } from "../../utils/textFormat";
+
 export default function FormField({ label, children, className = "", hint }) {
   return (
     <div className={className}>
       <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
-        {label}
+        {toTitleCase(label)}
       </label>
       {children}
       {hint ? (

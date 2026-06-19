@@ -52,7 +52,6 @@ export default function FamilyListPage() {
     individuals: localIndividuals,
     loading: dataLoading,
     setFamilies: setLocalFamilies,
-    source: dataSource,
   } = useJemaatData();
   const stats = getJemaatStatsFrom(localFamilies, localIndividuals);
   const sectors = getSectorOptionsFrom(localFamilies);
@@ -112,11 +111,9 @@ export default function FamilyListPage() {
     if (isSupabaseConfigured) {
       try {
         nextItem = await saveFamilyToSupabase(form);
-        setSyncMessage("Data keluarga tersimpan ke Supabase.");
-      } catch (saveError) {
-        setSyncMessage(
-          `${saveError.message || "Supabase belum menerima perubahan."} Perubahan disimpan lokal untuk demo.`
-        );
+        setSyncMessage("Data keluarga berhasil disimpan.");
+      } catch {
+        setSyncMessage("Perubahan tersimpan pada sesi ini, tetapi sinkronisasi belum berhasil.");
       }
     }
 
@@ -134,11 +131,9 @@ export default function FamilyListPage() {
     if (isSupabaseConfigured) {
       try {
         await deleteFamilyFromSupabase(familyId);
-        setSyncMessage("Data keluarga dihapus dari Supabase.");
-      } catch (deleteError) {
-        setSyncMessage(
-          `${deleteError.message || "Supabase belum menerima hapus data."} Data hanya dihapus dari tampilan lokal.`
-        );
+        setSyncMessage("Data keluarga berhasil dihapus.");
+      } catch {
+        setSyncMessage("Penghapusan belum tersinkron. Daftar pada sesi ini telah diperbarui.");
       }
     }
     setLocalFamilies((prev) => prev.filter((item) => item.id !== familyId));
@@ -154,7 +149,6 @@ export default function FamilyListPage() {
           <>
             <StatusBadge value="Sektor ikut keluarga" />
             <StatusBadge value="KKJ siap cetak" />
-            <StatusBadge value={dataSource === "supabase" ? "Supabase" : "LocalStorage"} />
           </>
         }
         actions={
@@ -170,7 +164,6 @@ export default function FamilyListPage() {
         error={dataError}
         label="data jemaat"
         loading={dataLoading}
-        source={dataSource}
       />
       {syncMessage ? (
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200">
@@ -374,7 +367,7 @@ export default function FamilyListPage() {
       <AdminModal
         open={modalOpen}
         title={form.id ? "Edit Keluarga" : "Tambah Keluarga"}
-        description="Dummy CRUD keluarga tersimpan di localStorage. Detail/KKJ lengkap tetap tersedia untuk data seed."
+        description="Lengkapi data keluarga sesuai dokumen KK dan administrasi jemaat."
         onClose={() => setModalOpen(false)}
       >
         <form className="grid gap-5 md:grid-cols-2" onSubmit={handleSubmit}>

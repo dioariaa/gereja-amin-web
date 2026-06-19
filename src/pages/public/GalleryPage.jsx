@@ -12,6 +12,7 @@ import {
   listActiveItems,
 } from "../../services/publicContentService";
 import { useGalleryCms } from "../../hooks/usePublicCmsData";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function GalleryPage() {
   const [activeCategory, setActiveCategory] = useState("Semua");
@@ -42,8 +43,8 @@ export default function GalleryPage() {
       <PublicHero
         eyebrow="Galeri"
         title="Dokumentasi ibadah dan pelayanan jemaat"
-        description="Galeri disiapkan sebagai ruang dokumentasi kegiatan gereja. Saat data gambar real sudah tersedia, admin dapat mengisi URL media atau menghubungkannya ke Supabase Storage."
-        aside={<MediaFrame label="Album dokumentasi" meta={`${activeGalleryItems.length} album siap isi`} />}
+        description="Kumpulan dokumentasi ibadah, persekutuan, kegiatan komisi, dan pelayanan kasih Gereja AMIN Jemaat Tangerang Raya."
+        aside={<MediaFrame label="Album dokumentasi" meta={`${activeGalleryItems.length} album kegiatan`} />}
       />
 
       <section className="grid gap-5 md:grid-cols-3">
@@ -54,13 +55,13 @@ export default function GalleryPage() {
         />
         <InfoCard
           icon={UploadCloud}
-          title="Siap media real"
-          description="Struktur item sudah mendukung image URL untuk nanti diisi dari admin atau Supabase Storage."
+          title="Dokumentasi terorganisasi"
+          description="Setiap album menyimpan momen pelayanan berdasarkan kategori kegiatan gereja."
         />
         <InfoCard
           icon={Images}
-          title="Aman untuk demo"
-          description="Tidak ada path gambar palsu, sehingga halaman tidak menampilkan broken image."
+          title="Kenangan pelayanan"
+          description="Dokumentasi menjadi catatan perjalanan kebersamaan dan pertumbuhan jemaat."
         />
       </section>
 
@@ -82,7 +83,7 @@ export default function GalleryPage() {
                       : "border-violet-200 text-slate-700 hover:bg-violet-50 dark:border-violet-950/60 dark:text-slate-200 dark:hover:bg-violet-950/30"
                   }`}
                 >
-                  {category}
+                  {toTitleCase(category)}
                 </button>
               ))}
             </div>
@@ -106,14 +107,14 @@ export default function GalleryPage() {
                 <div className="p-6">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-200">
-                      {album.category}
+                      {toTitleCase(album.category)}
                     </span>
                     <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-200">
                       {album.count} foto
                     </span>
                   </div>
                   <h2 className="mt-4 text-xl font-bold text-slate-950 dark:text-white">
-                    {album.title}
+                    {toTitleCase(album.title)}
                   </h2>
                   <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
                     {album.description}
@@ -128,7 +129,7 @@ export default function GalleryPage() {
         ) : (
           <EmptyPublicState
             title="Album belum tersedia"
-            description="Belum ada album pada kategori ini. Admin dapat menambahkan galeri dari panel admin."
+            description="Dokumentasi pada kategori ini akan ditampilkan setelah tersedia."
           />
         )}
       </section>

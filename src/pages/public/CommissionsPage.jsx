@@ -11,6 +11,7 @@ import {
   listCommissions,
 } from "../../services/commissionsService";
 import { useCommissionsCms } from "../../hooks/usePublicCmsData";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function CommissionsPage() {
   const [savedCommissions] = useCommissionsCms();
@@ -38,7 +39,7 @@ export default function CommissionsPage() {
         <SectionHeader
           eyebrow="Daftar Komisi"
           title="Komisi yang melayani jemaat"
-          description="Pilih komisi untuk melihat fokus pelayanan, pengurus, dan kegiatan basic yang sudah disiapkan."
+          description="Pilih komisi untuk melihat fokus pelayanan, pengurus, dan kegiatan yang sedang dijalankan."
         />
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -58,10 +59,10 @@ export default function CommissionsPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="brand-eyebrow text-xs font-semibold uppercase tracking-[0.18em]">
-                    {commission.shortName}
+                    {toTitleCase(commission.shortName)}
                   </p>
                   <h3 className="text-lg font-bold leading-6 text-slate-950 dark:text-white">
-                    {commission.name}
+                    {toTitleCase(commission.name)}
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
                     {commission.description}
@@ -98,13 +99,13 @@ export default function CommissionsPage() {
 function MetricCard({ title, value, accent }) {
   return (
     <div className="brand-card p-5">
-      <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
+      <p className="text-sm text-slate-500 dark:text-slate-400">{toTitleCase(title)}</p>
       <p className="mt-2 text-2xl font-bold text-violet-800 dark:text-violet-100">
         {value}
       </p>
       {accent ? (
         <p className="mt-1 text-sm font-semibold text-cyan-700 dark:text-cyan-200">
-          {accent}
+          {toTitleCase(accent)}
         </p>
       ) : null}
     </div>
@@ -117,7 +118,7 @@ function InfoLine({ icon: Icon, label, value }) {
       <Icon size={16} className="mt-0.5 shrink-0 text-violet-500" />
       <p>
         <span className="font-semibold text-slate-800 dark:text-slate-100">
-          {label}:
+          {toTitleCase(label)}:
         </span>{" "}
         {value}
       </p>

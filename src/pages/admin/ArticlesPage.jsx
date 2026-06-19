@@ -41,7 +41,7 @@ const emptyForm = {
 
 export default function ArticlesPage() {
   const [searchParams] = useSearchParams();
-  const [publications, setPublications, publicationsMeta] = usePublicationsCms({ admin: true });
+  const [publications, setPublications] = usePublicationsCms({ admin: true });
   const [commissionItems] = useCommissionsCms({ admin: true });
   const action = searchParams.get("action");
   const editSlug = searchParams.get("edit");
@@ -133,13 +133,10 @@ export default function ArticlesPage() {
         title={modeLabel}
         description={selectedCommission
           ? `Kelola publikasi yang terkait dengan ${selectedCommission.shortName || selectedCommission.name}.`
-          : "Kelola warta jemaat, renungan, buletin, dan publikasi per komisi. Data memakai Supabase bila tersedia, dengan localStorage sebagai fallback."
+          : "Kelola warta jemaat, renungan, buletin, dan publikasi per komisi dalam satu ruang editorial."
         }
         meta={
-          <>
-            <StatusBadge value={publicationsMeta.source} />
-            <StatusBadge value={editSlug || modeLabel} />
-          </>
+          <StatusBadge value={editSlug || modeLabel} />
         }
         actions={
           <ActionButton variant="primary" icon={Plus} onClick={() => openCreate()}>
@@ -149,13 +146,13 @@ export default function ArticlesPage() {
       />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard title="Total Publikasi" value={stats.total} description={publicationsMeta.error || "Supabase-aware CMS."} icon={FileText} />
+        <SummaryCard title="Total Publikasi" value={stats.total} description="Seluruh artikel yang dikelola." icon={FileText} />
         <SummaryCard title="Kategori" value={stats.categories} description="Warta, renungan, buletin, dll." icon={FileText} />
         <SummaryCard title="Publikasi Komisi" value={stats.commissionLinked} description="Artikel yang punya relasi komisi." icon={FileText} tone="success" />
         <SummaryCard title="Draft" value={stats.draft} description={`${stats.active} publikasi aktif.`} icon={FileText} />
       </section>
 
-      <DataTable eyebrow="Daftar Publikasi" title="Konten publikasi public">
+      <DataTable eyebrow="Daftar Publikasi" title="Konten publikasi website">
         <table className="min-w-full text-left text-sm">
           <thead>
             <tr className="border-b border-slate-200 dark:border-slate-800">
@@ -184,7 +181,7 @@ export default function ArticlesPage() {
                 <td className="px-3 py-4"><StatusBadge value={item.status} /></td>
                 <td className="px-3 py-4">
                   <div className="flex gap-2">
-                    <Link to={`/publikasi/${item.slug}`} className="brand-button-secondary rounded-xl p-2" title="Preview public">
+                    <Link to={`/publikasi/${item.slug}`} className="brand-button-secondary rounded-xl p-2" title="Lihat publikasi">
                       <Eye size={16} />
                     </Link>
                     <button type="button" className="brand-button-secondary rounded-xl p-2" onClick={() => openEdit(item)} title="Edit">
@@ -204,7 +201,7 @@ export default function ArticlesPage() {
       <AdminModal
         open={modalOpen}
         title={form.id ? "Edit Publikasi" : "Tambah Publikasi"}
-        description="Perubahan disimpan ke Supabase jika tersedia, lalu tetap dicache di browser untuk fallback demo."
+        description="Lengkapi informasi publikasi agar dapat ditampilkan dengan baik pada website."
         onClose={() => setModalOpen(false)}
       >
         <form className="grid gap-5 md:grid-cols-2" onSubmit={handleSubmit}>
@@ -239,7 +236,7 @@ export default function ArticlesPage() {
           <FormField label="Ringkasan" className="md:col-span-2">
             <textarea name="excerpt" value={form.excerpt} onChange={handleChange} rows="4" placeholder="Ringkasan singkat" className="input-base" />
           </FormField>
-          <FormField label="Cover Image / Storage Path" className="md:col-span-2" hint={getMediaFieldHint()}>
+          <FormField label="Gambar Sampul / URL Media" className="md:col-span-2" hint={getMediaFieldHint()}>
             <input name="coverImage" value={form.coverImage || ""} onChange={handleChange} placeholder="https://..." className="input-base" />
           </FormField>
           <FormField label="Label Cover">
@@ -249,7 +246,7 @@ export default function ArticlesPage() {
             <input name="readingTime" value={form.readingTime || ""} onChange={handleChange} placeholder="3 menit baca" className="input-base" />
           </FormField>
           <FormField label="Isi Detail" className="md:col-span-2">
-            <textarea name="content" value={form.content || ""} onChange={handleChange} rows="6" placeholder="Isi detail publikasi untuk halaman public" className="input-base" />
+            <textarea name="content" value={form.content || ""} onChange={handleChange} rows="6" placeholder="Isi lengkap publikasi untuk pembaca" className="input-base" />
           </FormField>
           <FormField label="Penulis / Tim">
             <input name="author" value={form.author || ""} onChange={handleChange} placeholder="Sekretariat Gereja" className="input-base" />

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { CalendarDays, MapPin, Newspaper, UsersRound } from "lucide-react";
-import heroImage from "../../assets/hero.png";
+import heroImage from "../../assets/home.png";
 import {
   churchInfo,
   getPrimaryContact,
@@ -26,6 +26,7 @@ import {
   SectionHeader,
   TagList,
 } from "../../components/public/PublicContent";
+import { toTitleCase } from "../../utils/textFormat";
 
 export default function HomePage() {
   const [homeContent] = useHomeContentCms();
@@ -45,24 +46,24 @@ export default function HomePage() {
 
   return (
     <div className="space-y-12">
-      <section className="relative isolate overflow-hidden rounded-3xl border border-violet-100 bg-[#2c2038] text-white shadow-sm dark:border-violet-950/60">
+      <section className="relative isolate overflow-hidden rounded-3xl border  text-white shadow-sm ">
         <img
           src={heroImage}
           alt={churchInfo.name}
           className="absolute inset-0 -z-10 h-full w-full object-cover opacity-40"
         />
-        <div className="absolute inset-0 -z-10 bg-[#2c2038]/75" />
+        <div className="absolute inset-0 -z-10 bg-[#000]/50" />
 
         <div className="grid min-h-[560px] gap-8 px-6 py-10 md:grid-cols-[1.1fr_0.9fr] md:px-10 md:py-16">
           <div className="flex flex-col justify-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100">
-              {homeContent.heroEyebrow}
+              {toTitleCase(homeContent.heroEyebrow)}
             </p>
             <h1 className="max-w-3xl text-3xl font-bold leading-tight md:text-5xl">
-              {homeContent.heroTitle}
+              {toTitleCase(homeContent.heroTitle)}
             </h1>
             <p className="mt-4 text-lg font-semibold text-white/90">
-              {homeContent.heroSubtitle}
+              {toTitleCase(homeContent.heroSubtitle)}
             </p>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/80 md:text-base">
               {homeContent.heroDescription}
@@ -86,14 +87,16 @@ export default function HomePage() {
 
           <div className="grid content-end gap-4">
             <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur">
-              <p className="text-sm text-cyan-100">Ibadah Umum Minggu</p>
+              <p className="text-sm text-cyan-100">{toTitleCase("Ibadah Umum Minggu")}</p>
               <h2 className="mt-2 text-lg font-semibold">
                 {mainFixedSchedule
                   ? mainFixedSchedule.time
                   : "Jadwal segera diperbarui"}
               </h2>
               <p className="mt-2 text-sm text-white/75">
-                {mainFixedSchedule?.title || "Terbuka untuk jemaat dan pengunjung yang ingin beribadah bersama."}
+                {mainFixedSchedule?.title
+                  ? toTitleCase(mainFixedSchedule.title)
+                  : "Terbuka untuk jemaat dan pengunjung yang ingin beribadah bersama."}
               </p>
             </div>
 
@@ -119,7 +122,7 @@ export default function HomePage() {
               {item.value}
             </p>
             <p className="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
-              {item.label}
+              {toTitleCase(item.label)}
             </p>
             <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
               {item.helper}
@@ -197,10 +200,10 @@ export default function HomePage() {
                 <UsersRound size={20} />
               </div>
               <p className="brand-eyebrow mt-4 text-xs font-semibold uppercase tracking-[0.18em]">
-                {commission.shortName}
+                {toTitleCase(commission.shortName)}
               </p>
               <h3 className="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-                {commission.name}
+                {toTitleCase(commission.name)}
               </h3>
               <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {commission.description}
@@ -226,12 +229,12 @@ export default function HomePage() {
               >
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-cyan-700 dark:text-cyan-200">
                   <Newspaper size={15} />
-                  <span>{item.category}</span>
+                  <span>{toTitleCase(item.category)}</span>
                   <span>-</span>
                   <span>{formatPublicDate(item.date)}</span>
                 </div>
                 <h3 className="mt-2 text-base font-bold text-slate-950 dark:text-white">
-                  {item.title}
+                  {toTitleCase(item.title)}
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
                   {item.excerpt}

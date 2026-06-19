@@ -35,14 +35,18 @@ export default function KkjPreview({ family, members, issuedDate = "2026-02-16" 
         </h2>
       </header>
 
-      <section className="mt-8 grid gap-3 rounded-xl border border-slate-200 p-4 text-sm print:border-slate-400 print:p-3">
-        <InfoRow label="No KK" value={family.noKk} />
-        <InfoRow label="Nama Kepala Keluarga" value={family.kepalaKeluarga} />
+      <section className="kkj-identity mt-8 rounded-xl border border-slate-200 p-4 text-sm print:border-slate-400 print:p-3">
+        <div className="kkj-identity-primary">
+          <IdentityField label="No KK" value={family.noKk} />
+          <IdentityField label="Nama Kepala Keluarga" value={family.kepalaKeluarga} />
+          <IdentityField label="Alamat" value={family.alamat} />
+        </div>
+        <div className="kkj-identity-secondary">
         <InfoRow label="Nama Pasangan" value={family.pasangan || "-"} />
         <InfoRow label="Tgl. Pernikahan" value={formatDate(family.tanggalPernikahan)} />
         <InfoRow label="Sektor" value={family.sektor} />
         <InfoRow label="Status Keluarga" value={family.statusKeluarga} />
-        <InfoRow label="Alamat" value={family.alamat} />
+        </div>
       </section>
 
       <section className="mt-7 break-inside-avoid">
@@ -142,6 +146,19 @@ function InfoRow({ label, value }) {
       <p className="font-semibold">{label}</p>
       <p>
         <span className="hidden sm:inline">: </span>
+        {value || "-"}
+      </p>
+    </div>
+  );
+}
+
+function IdentityField({ label, value }) {
+  return (
+    <div className="min-w-0 border-b border-slate-200 pb-2 md:border-b-0 md:border-r md:pb-0 md:pr-4 last:border-0 print:border-b-0 print:border-r print:border-slate-300 print:pb-0 print:pr-3 print:last:border-r-0">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 print:text-[8px] print:text-slate-700">
+        {label}
+      </p>
+      <p className="mt-1 break-words font-semibold leading-5 text-slate-950 print:text-[9px] print:leading-4">
         {value || "-"}
       </p>
     </div>

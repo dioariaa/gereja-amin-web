@@ -7,6 +7,7 @@ import {
   churchInfo,
 } from "../../services/publicContentService";
 import { useAboutContentCms } from "../../hooks/usePublicCmsData";
+import { toTitleCase } from "../../utils/textFormat";
 
 function PersonCard({ role, name, photo = "" }) {
   const [hasPhoto, setHasPhoto] = useState(Boolean(photo));
@@ -26,15 +27,15 @@ function PersonCard({ role, name, photo = "" }) {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-violet-500 shadow-sm dark:bg-slate-900 dark:text-violet-200">
               <User size={28} />
             </div>
-            <span className="text-sm font-medium">Belum ada foto</span>
+            <span className="sr-only">Foto pengurus</span>
           </div>
         )}
       </div>
 
       <div className="p-5">
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{role}</p>
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{toTitleCase(role)}</p>
         <h3 className="mt-2 text-base font-semibold leading-6 text-slate-950 dark:text-white">
-          {name}
+          {toTitleCase(name)}
         </h3>
       </div>
     </div>
@@ -90,10 +91,10 @@ export default function AboutPage() {
       <section className="brand-card rounded-3xl px-6 py-10 md:px-10 md:py-14">
         <BrandLogo size="lg" subtitle="Tangerang Raya" />
         <p className="brand-eyebrow mt-8 text-sm font-semibold uppercase tracking-[0.22em]">
-          {aboutContent.pageEyebrow}
+          {toTitleCase(aboutContent.pageEyebrow)}
         </p>
         <h1 className="mt-3 max-w-4xl text-3xl font-bold text-slate-950 md:text-5xl dark:text-white">
-          {aboutContent.title}
+          {toTitleCase(aboutContent.title)}
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 md:text-base dark:text-slate-300">
           {aboutContent.summary}
@@ -109,7 +110,7 @@ export default function AboutPage() {
             key={item.title}
             className="brand-card p-5"
           >
-            <p className="text-sm text-slate-500 dark:text-slate-400">{item.title}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{toTitleCase(item.title)}</p>
             <p className="mt-2 text-lg font-bold text-slate-950 dark:text-white">
               {item.value}
             </p>
@@ -160,7 +161,7 @@ export default function AboutPage() {
                 {item.date}
               </p>
               <h3 className="mt-2 text-lg font-bold text-slate-950 dark:text-white">
-                {item.title}
+                {toTitleCase(item.title)}
               </h3>
               <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
                 {item.description}
@@ -196,7 +197,9 @@ export default function AboutPage() {
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100">
           Pengakuan Iman
         </p>
-        <h2 className="mt-2 text-2xl font-bold md:text-3xl">Dasar keyakinan gereja</h2>
+        <h2 className="mt-2 text-2xl font-bold md:text-3xl">
+          {toTitleCase("Dasar keyakinan gereja")}
+        </h2>
         <div className="mt-6 grid gap-3 md:grid-cols-2">
           {[
             "Percaya kepada Allah Tritunggal: Bapa, Anak, dan Roh Kudus.",
@@ -218,9 +221,11 @@ function InfoPanel({ eyebrow, title, children }) {
   return (
     <div className="brand-card p-6">
       <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
-        {eyebrow}
+        {toTitleCase(eyebrow)}
       </p>
-      <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">{title}</h2>
+      <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
+        {toTitleCase(title)}
+      </h2>
       <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
         {children}
       </p>
@@ -233,10 +238,10 @@ function PeopleSection({ eyebrow, title, items, columns = "xl:grid-cols-3" }) {
     <section className="space-y-5">
       <div>
         <p className="brand-eyebrow text-sm font-semibold uppercase tracking-[0.22em]">
-          {eyebrow}
+          {toTitleCase(eyebrow)}
         </p>
         <h2 className="mt-2 text-2xl font-bold text-slate-950 md:text-3xl dark:text-white">
-          {title}
+          {toTitleCase(title)}
         </h2>
       </div>
       <div className={`grid gap-5 sm:grid-cols-2 ${columns}`}>
